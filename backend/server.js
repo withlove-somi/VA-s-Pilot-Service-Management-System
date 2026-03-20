@@ -189,6 +189,14 @@ app.get("/api/health", async (req, res) => {
   });
 });
 
+app.get("/", (req, res) => {
+  res.json({
+    ok: true,
+    service: "va-pilot-backend",
+    message: "API is running",
+  });
+});
+
 async function handleRegister(req, res) {
   try {
     const fullname = String(req.body.fullname || req.body.name || "").trim();
@@ -882,9 +890,9 @@ async function start() {
     await mongoose.connect(MONGO_URI);
     await ensureCollections();
     await seedAdminIfMissing();
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-      console.log(`MongoDB connected: ${MONGO_URI}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`MongoDB connected successfully! (URI hidden for security)`);
       console.log(`MongoDB database: ${mongoose.connection?.name || "unknown"}`);
     });
   } catch (error) {

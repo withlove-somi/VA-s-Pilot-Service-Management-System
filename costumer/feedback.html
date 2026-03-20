@@ -145,7 +145,7 @@
         }, 250);
       });
 
-      var API_BASE = "http://127.0.0.1:5000";
+      var API_BASE = "https://va-s-pilot-service-management-system-production-d6a0.up.railway.app";
       async function apiJson(path, options) {
         var response = await fetch(API_BASE + path, {
           headers: { "Content-Type": "application/json" },
@@ -213,3 +213,4 @@
     </script>
   </body>
 </html>
+
