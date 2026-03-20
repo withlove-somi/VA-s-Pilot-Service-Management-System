@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Directory | Admin Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: {
+            'brand-bg': '#0f0518',
+            'brand-pink': '#e000ff',
+            'brand-purple': '#7a00ff'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-brand-bg text-white font-sans antialiased h-screen flex relative overflow-hidden">
+  <div class="fixed inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
+  <div class="fixed top-[-10%] left-[20%] w-[500px] h-[500px] bg-brand-purple/10 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none z-0"></div>
+
+  <aside class="w-64 h-full flex flex-col bg-[#150723]/90 backdrop-blur-2xl border-r border-white/10 relative z-20 hidden md:flex shrink-0">
+        <div class="p-6 border-b border-white/10 flex items-center gap-2">
+            <span class="text-brand-pink text-3xl font-bold leading-none">VA</span>
+            <span class="text-white text-sm font-bold tracking-widest mt-1 leading-tight">ADMIN<br>PORTAL</span>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-purple/10 text-brand-purple border border-brand-purple/20 shadow-[0_0_15px_rgba(122,0,255,0.1)] transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                <span class="font-semibold tracking-wide text-sm">Dashboard</span>
+            </a>
+            <a href="admin-order-request.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Order Request</span>
+            </a>
+            <a href="admin-orders.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Orders</span>
+            </a>
+            <a href="admin-completed.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Completed</span>
+            </a>
+            <a href="admin-verification-request.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Verification Request</span>
+            </a>
+            <a href="admin-inbox.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 12.839c-.066.214-.1.437-.1.661z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Inbox</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-white/10 mt-auto">
+            <a href="admin-login.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-white hover:bg-red-500/20 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                <span class="font-medium tracking-wide text-sm">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+  <main class="flex-1 overflow-y-auto p-6 md:p-10 z-10">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">Customer Directory</h1>
+        <p class="text-gray-400">All customers registered in the system. Click a card to view the profile.</p>
+      </div>
+      <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        <input id="user-search" type="text" placeholder="Search name or email..." class="w-full md:w-64 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-pink">
+        <div class="relative w-full md:w-56">
+          <button id="filter-toggle" type="button" class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white flex items-center justify-between focus:outline-none focus:border-brand-pink">
+            <span id="filter-label">Filters</span>
+            <svg class="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div id="filter-menu" class="hidden absolute right-0 mt-2 w-full bg-[#150723] border border-white/10 rounded-lg shadow-xl p-3 z-20">
+            <label class="flex items-center gap-2 text-sm text-gray-200 mb-2">
+              <input type="checkbox" class="filter-check accent-brand-pink w-4 h-4" value="verified">
+              Verified
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-200 mb-2">
+              <input type="checkbox" class="filter-check accent-brand-pink w-4 h-4" value="unverified">
+              Unverified
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-200 mb-2">
+              <input type="checkbox" class="filter-check accent-brand-pink w-4 h-4" value="flag1">
+              1st Flag
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-200 mb-2">
+              <input type="checkbox" class="filter-check accent-brand-pink w-4 h-4" value="flag2">
+              2nd Flag
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-200 mb-2">
+              <input type="checkbox" class="filter-check accent-brand-pink w-4 h-4" value="flag3">
+              3rd Flag
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-200">
+              <input type="checkbox" class="filter-check accent-brand-pink w-4 h-4" value="banned">
+              Banned Accounts
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="users" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </main>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:5000';
+
+    async function apiJson(path, options = {}) {
+      const response = await fetch(`${API_BASE}${path}`, {
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        ...options
+      });
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (e) {
+        data = {};
+      }
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || `Request failed (${response.status})`);
+      }
+      return data;
+    }
+
+    let allUsers = [];
+
+    function applyFilters() {
+      const container = document.getElementById('users');
+      const query = String(document.getElementById('user-search').value || '').trim().toLowerCase();
+      const selectedFilters = Array.from(document.querySelectorAll('.filter-check:checked')).map((el) => el.value);
+
+      const filtered = allUsers.filter((u) => {
+        const email = String(u.email || '').trim().toLowerCase();
+        const name = (u.fullname || u.name || 'Customer').trim();
+        const nameLower = name.toLowerCase();
+        const banned = Boolean(u.banned);
+        const verified = Boolean(u.verified);
+        const warningLevel = Number(u.warningLevel || 0);
+
+        if (selectedFilters.length) {
+          const matchesFilter =
+            (selectedFilters.includes('verified') && verified) ||
+            (selectedFilters.includes('unverified') && !verified) ||
+            (selectedFilters.includes('flag1') && warningLevel === 1) ||
+            (selectedFilters.includes('flag2') && warningLevel === 2) ||
+            (selectedFilters.includes('flag3') && warningLevel === 3) ||
+            (selectedFilters.includes('banned') && banned);
+          if (!matchesFilter) return false;
+        }
+
+        if (query) {
+          return nameLower.includes(query) || email.includes(query);
+        }
+        return true;
+      });
+
+      if (!filtered.length) {
+        container.innerHTML = '<div class="p-8 rounded-xl border border-white/10 bg-black/30 text-gray-400 md:col-span-2">No customers found.</div>';
+        return;
+      }
+
+      const sorted = filtered.slice().sort((a, b) => {
+        const aBanned = Boolean(a.banned);
+        const bBanned = Boolean(b.banned);
+        if (aBanned !== bBanned) return aBanned ? 1 : -1;
+        const aName = (a.fullname || a.name || '').toLowerCase();
+        const bName = (b.fullname || b.name || '').toLowerCase();
+        return aName.localeCompare(bName);
+      });
+
+      container.innerHTML = '';
+      sorted.forEach((u) => {
+        const email = String(u.email || '').trim().toLowerCase();
+        const name = (u.fullname || u.name || 'Customer').trim();
+        const initials = name
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part[0].toUpperCase())
+          .join('');
+        const avatarContent = u.profileImage
+          ? `<img src="${u.profileImage}" alt="${name} profile photo" class="w-full h-full object-cover">`
+          : `<span class="text-brand-purple font-bold">${initials || 'CU'}</span>`;
+
+        const card = document.createElement('a');
+        card.href = `admin-customer-profile.html?email=${encodeURIComponent(email)}`;
+        card.className = 'bg-black/40 border border-white/10 rounded-2xl p-5 hover:border-brand-pink/40 hover:bg-white/5 transition-all flex items-center justify-between gap-4';
+        card.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-brand-purple/20 border border-brand-purple/40 flex items-center justify-center overflow-hidden">
+              ${avatarContent}
+            </div>
+            <div>
+              <div class="font-bold text-lg">${name}</div>
+              <div class="text-sm text-gray-400">${email}</div>
+            </div>
+          </div>
+          <span class="px-2 py-1 rounded text-xs font-bold ${u.verified ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}">${u.verified ? 'Verified' : 'Unverified'}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function renderUsers() {
+      const container = document.getElementById('users');
+      let users = [];
+      try {
+        const payload = await apiJson('/api/users');
+        users = payload.users || [];
+      } catch (err) {
+        container.innerHTML = `<div class="p-8 rounded-xl border border-red-500/20 bg-black/30 text-red-300 md:col-span-2">Unable to load users: ${err.message || 'Request failed'}</div>`;
+        return;
+      }
+
+      const validUsers = users.filter((u) => {
+        const email = String(u.email || '').trim();
+        const role = String(u.role || 'customer').toLowerCase();
+        return email && role !== 'admin';
+      });
+
+      allUsers = validUsers;
+      applyFilters();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUsers();
+      document.getElementById('user-search').addEventListener('input', applyFilters);
+      document.querySelectorAll('.filter-check').forEach((box) => {
+        box.addEventListener('change', () => {
+          updateFilterLabel();
+          applyFilters();
+        });
+      });
+
+      const filterToggle = document.getElementById('filter-toggle');
+      const filterMenu = document.getElementById('filter-menu');
+
+      filterToggle.addEventListener('click', () => {
+        filterMenu.classList.toggle('hidden');
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!filterMenu.contains(event.target) && !filterToggle.contains(event.target)) {
+          filterMenu.classList.add('hidden');
+        }
+      });
+
+      updateFilterLabel();
+    });
+
+    function updateFilterLabel() {
+      const label = document.getElementById('filter-label');
+      const selected = Array.from(document.querySelectorAll('.filter-check:checked'));
+      if (!selected.length) {
+        label.textContent = 'Filters';
+        return;
+      }
+      const names = selected.map((el) => el.parentElement.textContent.trim());
+      label.textContent = names.length <= 2 ? names.join(', ') : `${names.length} selected`;
+    }
+  </script>
+  <script src="sidebar-active.js"></script>
+</body>
+</html>

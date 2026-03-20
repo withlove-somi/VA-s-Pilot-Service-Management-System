@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Orders | Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'brand-bg': '#0f0518',
+                        'brand-pink': '#e000ff',
+                        'brand-purple': '#7a00ff',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex relative overflow-hidden">
+
+    <div class="fixed inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
+    <div class="fixed top-[-10%] left-[20%] w-[500px] h-[500px] bg-brand-purple/10 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none z-0"></div>
+
+    <aside class="w-64 h-full flex flex-col bg-[#150723]/90 backdrop-blur-2xl border-r border-white/10 relative z-20 hidden md:flex shrink-0">
+        <div class="p-6 border-b border-white/10 flex items-center gap-2">
+            <span class="text-brand-pink text-3xl font-bold leading-none">VA</span>
+            <span class="text-white text-sm font-bold tracking-widest mt-1 leading-tight">ADMIN<br>PORTAL</span>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-purple/10 text-brand-purple border border-brand-purple/20 shadow-[0_0_15px_rgba(122,0,255,0.1)] transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                <span class="font-semibold tracking-wide text-sm">Dashboard</span>
+            </a>
+            <a href="admin-order-request.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Order Request</span>
+            </a>
+            <a href="admin-orders.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Orders</span>
+            </a>
+            <a href="admin-completed.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Completed</span>
+            </a>
+            <a href="admin-verification-request.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Verification Request</span>
+            </a>
+            <a href="admin-inbox.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 12.839c-.066.214-.1.437-.1.661z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Inbox</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-white/10 mt-auto">
+            <a href="admin-login.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-white hover:bg-red-500/20 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                <span class="font-medium tracking-wide text-sm">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto z-10 p-6 md:px-10">
+        <div class="max-w-6xl w-full mx-auto py-6">
+            <header class="mb-10">
+                <h1 class="text-3xl font-bold tracking-tight text-white">Ongoing Operations.</h1>
+                <p class="text-gray-400 mt-1">Manage accepted contracts, verify payments, and oversee active deployments.</p>
+            </header>
+
+            <div id="admin-orders-list" class="space-y-6">
+                </div>
+        </div>
+    </main>
+
+    <div id="proof-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="relative w-full max-w-lg bg-[#0f0518] border border-white/10 p-8 rounded-2xl shadow-[0_0_40px_rgba(122,0,255,0.2)] transform scale-95 transition-transform duration-300" id="proof-modal-content">
+            
+            <button onclick="closeProofModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-pink transition-colors z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <header class="mb-6 text-center">
+                <h2 class="text-2xl font-bold tracking-tight text-white mb-2">Review Payment</h2>
+                <p class="text-gray-400 text-sm">Verify the client's submitted receipt and reference number.</p>
+            </header>
+
+            <div class="space-y-5">
+                <div class="bg-[#150723] border border-white/10 rounded-xl overflow-hidden flex items-center justify-center p-2 shadow-inner h-64">
+                    <img id="modal-proof-image" src="" alt="Payment Receipt" class="max-w-full max-h-full object-contain rounded-lg">
+                </div>
+                
+                <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Reference / Receipt Number</p>
+                    <p id="modal-proof-ref" class="text-lg font-mono text-brand-pink tracking-wider">0000000000</p>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="handleProofDecision('Disapproved')" class="w-1/3 py-3 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-lg font-bold text-xs uppercase tracking-widest transition-all">
+                        Reject
+                    </button>
+                    <button type="button" onclick="handleProofDecision('Payment Verified')" class="w-2/3 py-3 bg-green-500 hover:bg-green-400 text-white rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                        Verify Funds
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        const terminalStates = ['Completed', 'Cancelled', 'Declined', 'Disapproved'];
+        let currentReviewingOrderId = null;
+        let ordersCache = [];
+        let transactionsCache = [];
+
+        async function apiJson(path, options = {}) {
+            const response = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+            if (!response.ok || data.ok === false) {
+                throw new Error(data.error || `Request failed (${response.status})`);
+            }
+            return data;
+        }
+
+        function getLatestTransaction(orderId) {
+            const matches = transactionsCache.filter((t) => String(t.orderId) === String(orderId));
+            if (!matches.length) return null;
+            return matches.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))[0];
+        }
+
+        async function loadAdminOrders() {
+            const container = document.getElementById('admin-orders-list');
+            try {
+                const [ordersPayload, transactionsPayload] = await Promise.all([
+                    apiJson('/api/orders'),
+                    apiJson('/api/transactions')
+                ]);
+                ordersCache = ordersPayload.orders || [];
+                transactionsCache = transactionsPayload.transactions || [];
+            } catch (err) {
+                container.innerHTML = `<div class="bg-black/40 border border-red-500/30 rounded-2xl p-8 text-center text-red-300 text-sm">Unable to load orders: ${err.message || 'Request failed'}</div>`;
+                return;
+            }
+            
+            // FILTER: Show orders that are NOT requests and NOT terminal
+            const activeOrders = ordersCache.filter(order => order.status && order.status !== 'Order Request' && !terminalStates.includes(order.status));
+
+            if (activeOrders.length === 0) {
+                container.innerHTML = `<div class="bg-black/40 border border-white/10 rounded-2xl p-12 text-center text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">No ongoing operations at this time.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            activeOrders.forEach(order => {
+                let statusColor = "text-gray-400 border-white/10";
+                let adminActions = "";
+                const currentStatus = order.status;
+
+                if (currentStatus === 'Order Accepted') {
+                    statusColor = "text-yellow-400 border-yellow-400/20 bg-yellow-400/5";
+                    adminActions = `<div class="w-full md:w-[200px] px-6 py-3 text-center text-yellow-400/60 rounded-lg font-bold text-[10px] uppercase tracking-widest border border-yellow-400/10 border-dashed">Awaiting Client Payment</div>`;
+                } else if (currentStatus === 'Payment Sent') {
+                    statusColor = "text-blue-400 border-blue-400/20 bg-blue-400/5";
+                    adminActions = `
+                        <button onclick="openProofModal('${order.id}')" class="w-full md:w-[200px] px-6 py-3 bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500 text-blue-300 hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]">View Payment Proof</button>
+                    `;
+                } else if (currentStatus === 'Payment Verified') {
+                    statusColor = "text-green-400 border-green-400/20 bg-green-400/5";
+                    adminActions = `<button onclick="updateStatus('${order.id}', 'Gaming Started')" class="w-full md:w-[200px] px-6 py-3 bg-gradient-to-r from-brand-pink to-brand-purple text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(224,0,255,0.3)]">Deploy Pilot</button>`;
+                } else if (currentStatus === 'Gaming Started') {
+                    statusColor = "text-brand-pink border-brand-pink/20 bg-brand-pink/5 animate-pulse";
+                    adminActions = `<button onclick="updateStatus('${order.id}', 'Completed')" class="w-full md:w-[200px] px-6 py-3 bg-white text-black rounded-lg font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all">Finalize Mission</button>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = "flex flex-col gap-3 w-full";
+                card.innerHTML = `
+                    <div class="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6 md:p-8 shadow-xl flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden w-full group hover:border-brand-purple/40 transition-all">
+                        <div class="flex-1 w-full">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-[11px] font-bold text-gray-500 tracking-[0.2em] uppercase">Order ID: ${order.id}</span>
+                                <span class="text-[11px] font-bold uppercase tracking-widest ${statusColor} px-3 py-1.5 rounded border">${currentStatus}</span>
+                            </div>
+                            
+                            <div class="flex items-center gap-5 mb-6">
+                                <div class="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-pink shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                </div>
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h3 class="text-2xl font-bold text-white tracking-tight">${order.customerName || order.clientName || 'Standard Pilot'}</h3>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${order.customerVerified ? 'text-green-300 border-green-400/30 bg-green-400/10' : 'text-yellow-300 border-yellow-400/30 bg-yellow-400/10'}">
+                                            ${order.customerVerified ? 'Verified' : 'Unverified'}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 font-medium">Requested: ${order.date || 'Today'}</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white/[0.02] p-4 rounded-lg border border-white/5">
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Game</span>
+                                    <span class="text-sm font-semibold text-white">${order.game || 'Boost Service'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">IGN</span>
+                                    <span class="text-sm font-semibold text-white truncate block">${order.ign || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Account ID</span>
+                                    <span class="text-sm font-semibold text-white">${order.accountId || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Server ID</span>
+                                    <span class="text-sm font-semibold text-white">${order.serverId || 'N/A'}</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 bg-white/[0.02] p-4 rounded-lg border border-white/5">
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Login Method</span>
+                                    <span class="text-sm font-semibold text-white">${order.pilotLoginMethod || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Email</span>
+                                    <span class="text-sm font-semibold text-white">${order.pilotLoginEmail || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Password</span>
+                                    <span class="text-sm font-semibold text-white">${order.pilotLoginPassword || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Contact Number</span>
+                                    <span class="text-sm font-semibold text-white">${order.pilotLoginNumber || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Current Rank</span>
+                                    <span class="text-sm font-semibold text-gray-300">${order.currentRank || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Target Rank</span>
+                                    <span class="text-sm font-semibold text-white">${order.targetRank || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Stars Needed</span>
+                                    <span class="text-sm font-semibold text-white">${order.starsNeeded || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Total</span>
+                                    <span class="text-sm font-semibold text-brand-pink">₱${order.totalPrice || '0.00'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full md:w-auto flex flex-col items-center md:items-end md:pl-10 md:border-l border-white/10 shrink-0">
+                            <span class="text-[11px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">Total Payment</span>
+                            <span class="text-3xl font-black text-white mb-5">₱${order.totalPrice || '0.00'}</span>
+                            <div class="w-full md:w-auto flex justify-center">${adminActions}</div>
+                            <div class="w-full md:w-auto mt-3">
+                                <a href="admin-chat.html?email=${encodeURIComponent(order.customerEmail || order.customer_email || '')}" class="group flex items-center justify-center gap-3 w-full md:w-auto px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-brand-pink group-hover:scale-110 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785 0.5.5 0 00.37.818 9.03 9.03 0 003.748-.976c.5-.27.428-.593.633-.74a9.385 9.385 0 014.313-1.048z" /></svg>
+                                    Message Client
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openProofModal(orderId) {
+            const order = ordersCache.find(o => o.id === orderId);
+            const txn = getLatestTransaction(orderId);
+
+            if (order) {
+                currentReviewingOrderId = orderId;
+                const receiptImage = (txn && txn.receiptImage) || order.receiptImage;
+                const paymentReference = (txn && txn.paymentReference) || order.paymentReference;
+
+                document.getElementById('modal-proof-image').src = receiptImage || 'https://via.placeholder.com/300?text=No+Image+Uploaded';
+                document.getElementById('modal-proof-ref').textContent = paymentReference || 'Not Provided';
+
+                const modal = document.getElementById('proof-modal');
+                const modalContent = document.getElementById('proof-modal-content');
+                modal.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modalContent.classList.remove('scale-95');
+                    modalContent.classList.add('scale-100');
+                }, 10);
+            }
+        }
+
+        function closeProofModal() {
+            const modal = document.getElementById('proof-modal');
+            const modalContent = document.getElementById('proof-modal-content');
+            
+            modal.classList.add('opacity-0');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                currentReviewingOrderId = null; 
+            }, 300);
+        }
+
+        function handleProofDecision(newStatus) {
+            if (currentReviewingOrderId) {
+                updateStatus(currentReviewingOrderId, newStatus);
+                closeProofModal();
+            }
+        }
+
+        async function updateStatus(orderId, newStatus) {
+            try {
+                await apiJson(`/api/orders/${encodeURIComponent(orderId)}/status`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ status: newStatus })
+                });
+                await loadAdminOrders();
+            } catch (err) {
+                alert(err.message || 'Unable to update order status.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadAdminOrders);
+    </script>
+    <script src="sidebar-active.js"></script>
+</body>
+</html>
+
+
+
+
+

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP | VA Pilot Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'brand-bg': '#0f0518',
+                        'brand-pink': '#e000ff',
+                        'brand-purple': '#7a00ff',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex items-center justify-center relative overflow-hidden">
+
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
+    
+    <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-purple/20 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none z-0 animate-pulse"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-brand-pink/20 rounded-full mix-blend-screen filter blur-[100px] pointer-events-none z-0"></div>
+
+    <a href="login.html" class="absolute top-8 left-8 z-20 text-gray-400 hover:text-brand-pink transition-colors flex items-center gap-2 text-sm font-medium">
+        <span>←</span> Back to Login
+    </a>
+
+    <div class="w-full max-w-md relative z-10 px-6">
+        
+        <div class="bg-[#150723]/80 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <span class="text-brand-pink text-3xl font-bold leading-none">VA</span>
+                    <span class="text-white text-lg font-bold tracking-widest mt-1">PILOT SERVICE</span>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">System Verification</h1>
+                <p id="otp-description" class="text-xs text-gray-400 mt-3 leading-relaxed">Enter the 6-digit authorization code transmitted to your device.</p>
+            </div>
+
+            <form id="otp-form" class="space-y-8">
+                
+                <div class="flex justify-between gap-2" id="otp-container">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all shadow-inner">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all shadow-inner">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all shadow-inner">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all shadow-inner">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all shadow-inner">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all shadow-inner">
+                </div>
+
+                <p id="error-msg" class="text-red-500 text-xs text-center hidden font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20"></p>
+
+                <button id="verify-btn" type="button" class="w-full bg-gradient-to-r from-brand-pink to-brand-purple hover:from-fuchsia-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_15px_rgba(224,0,255,0.3)] hover:shadow-[0_0_25px_rgba(224,0,255,0.6)] hover:-translate-y-0.5 tracking-widest text-sm">
+                    VERIFY & PROCEED
+                </button>
+            </form>
+
+            <div class="mt-8 text-center text-sm text-gray-400 border-t border-white/5 pt-6">
+                Didn't receive the code? 
+                <button id="resend-btn" type="button" class="text-brand-pink hover:text-white font-semibold transition-colors focus:outline-none ml-1">
+                    Resend OTP
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="auth-otp.js"></script>
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const verifyBtn = document.getElementById('verify-btn');
+        const resendBtn = document.getElementById('resend-btn');
+        const errorMsg = document.getElementById('error-msg');
+        const otpDescription = document.getElementById('otp-description');
+        const otpForm = document.getElementById('otp-form');
+
+        async function apiJson(path, options = {}) {
+            const response = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+            if (!response.ok || data.ok === false) {
+                throw new Error(data.error || `Request failed (${response.status})`);
+            }
+            return data;
+        }
+
+        const activeOtpState = getPendingOtp();
+        if (!activeOtpState) {
+            otpDescription.textContent = "No active OTP request found. Start again from login or forgot password.";
+        } else {
+            otpDescription.textContent = `Enter the 6-digit code sent to ${maskEmail(activeOtpState.email)}.`;
+        }
+
+        otpInputs.forEach((input, index) => {
+            // Auto-advance to next input when a number is typed
+            input.addEventListener('input', (e) => {
+                // Only allow numbers
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                
+                if (e.target.value !== '' && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            // Handle Backspace to go to the previous input
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+
+            // Select text on focus for easy overwrite
+            input.addEventListener('focus', (e) => {
+                e.target.select();
+            });
+        });
+
+        function getEnteredOtp() {
+            return Array.from(otpInputs).map((input) => input.value).join('');
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.classList.remove('hidden');
+        }
+
+        function clearError() {
+            errorMsg.textContent = '';
+            errorMsg.classList.add('hidden');
+        }
+
+        verifyBtn.addEventListener('click', async () => {
+            clearError();
+
+            const otpCode = getEnteredOtp();
+            if (otpCode.length !== 6) {
+                showError("Enter the full 6-digit OTP.");
+                return;
+            }
+
+            const result = verifyOtpCode(otpCode);
+            if (!result.ok) {
+                if (result.reason === 'expired') showError("OTP expired. Please resend a new code.");
+                else if (result.reason === 'missing') showError("No active OTP request found.");
+                else showError("Invalid OTP. Please try again.");
+                return;
+            }
+
+            const purpose = result.state.purpose;
+            const email = result.state.email;
+
+            if (purpose === 'login') {
+                try {
+                    const payload = await apiJson(`/api/users/${encodeURIComponent(email)}`);
+                    localStorage.setItem('va_pilot_current_user', JSON.stringify(payload.user));
+                    localStorage.removeItem('va_pilot_login_candidate');
+                    clearPendingOtp();
+                    window.location.href = 'dashboard.html';
+                } catch (err) {
+                    showError(err.message || "Account no longer exists.");
+                }
+                return;
+            }
+
+            if (purpose === 'reset_password') {
+                localStorage.setItem('va_pilot_reset_verified_email', email);
+                clearPendingOtp();
+                window.location.href = 'reset-password.html';
+                return;
+            }
+
+            if (purpose === 'register') {
+                const pendingUser = JSON.parse(localStorage.getItem('va_pilot_pending_user') || "null");
+                if (!pendingUser || String(pendingUser.email || '').trim().toLowerCase() !== String(email || '').trim().toLowerCase()) {
+                    showError("Registration session mismatch. Please register again.");
+                    return;
+                }
+                try {
+                    verifyBtn.disabled = true;
+                    verifyBtn.textContent = 'CREATING ACCOUNT...';
+
+                    const payload = await apiJson('/api/auth/register', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            fullname: pendingUser.fullname,
+                            email: pendingUser.email,
+                            password: pendingUser.password
+                        })
+                    });
+
+                    // Keep a local mirror for pages still relying on localStorage.
+                    const users = JSON.parse(localStorage.getItem('va_pilot_users')) || [];
+                    const normalizedEmail = String(pendingUser.email || '').trim().toLowerCase();
+                    const nextUser = {
+                        fullname: payload.user?.fullname || pendingUser.fullname,
+                        name: payload.user?.name || pendingUser.fullname,
+                        email: normalizedEmail,
+                        password: pendingUser.password,
+                        verified: Boolean(payload.user?.verified),
+                        role: payload.user?.role || 'customer',
+                        createdAt: new Date().toISOString()
+                    };
+                    const filtered = users.filter((u) => String(u.email || '').trim().toLowerCase() !== normalizedEmail);
+                    filtered.push(nextUser);
+                    localStorage.setItem('va_pilot_users', JSON.stringify(filtered));
+                    localStorage.removeItem('va_pilot_pending_user');
+                    clearPendingOtp();
+                    window.location.href = 'login.html';
+                } catch (err) {
+                    showError(err.message || "Unable to create account.");
+                } finally {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'VERIFY & PROCEED';
+                }
+                return;
+            }
+
+            showError("Unknown OTP flow. Please start again.");
+        });
+
+        otpForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            verifyBtn.click();
+        });
+
+        resendBtn.addEventListener('click', async () => {
+            clearError();
+            try {
+                await resendOtpFlow();
+            } catch (err) {
+                showError(err.message || "Unable to resend OTP right now.");
+            }
+        });
+    </script>
+    <script src="chat-widget.js"></script>
+</body>
+</html>
+
+
+
+
+

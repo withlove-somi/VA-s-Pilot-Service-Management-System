@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | VA Pilot Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'brand-bg': '#0f0518',
+                        'brand-pink': '#e000ff',
+                        'brand-purple': '#7a00ff',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex relative overflow-hidden">
+
+    <div class="fixed inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
+    <div class="fixed top-[-10%] left-[20%] w-[500px] h-[500px] bg-brand-purple/10 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-10%] right-[-5%] w-[400px] h-[400px] bg-brand-pink/10 rounded-full mix-blend-screen filter blur-[100px] pointer-events-none z-0"></div>
+
+    <aside class="w-64 h-full flex flex-col bg-[#150723]/90 backdrop-blur-2xl border-r border-white/10 relative z-20 hidden md:flex shrink-0">
+        <div class="p-6 border-b border-white/10 flex items-center gap-2">
+            <span class="text-brand-pink text-3xl font-bold leading-none">VA</span>
+            <span class="text-white text-sm font-bold tracking-widest mt-1 leading-tight">ADMIN<br>PORTAL</span>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="admin-dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-purple/10 text-brand-purple border border-brand-purple/20 shadow-[0_0_15px_rgba(122,0,255,0.1)] transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                <span class="font-semibold tracking-wide text-sm">Dashboard</span>
+            </a>
+            <a href="admin-order-request.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Order Request</span>
+            </a>
+            <a href="admin-orders.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Orders</span>
+            </a>
+            <a href="admin-completed.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Completed</span>
+            </a>
+            <a href="admin-verification-request.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Verification Request</span>
+            </a>
+            <a href="admin-inbox.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 12.839c-.066.214-.1.437-.1.661z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Inbox</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-white/10 mt-auto">
+            <a href="admin-login.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-white hover:bg-red-500/20 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                <span class="font-medium tracking-wide text-sm">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto z-10 p-6 md:px-10">
+        <div class="max-w-6xl w-full mx-auto py-6">
+            
+            <header class="mb-10">
+                <h1 class="text-3xl font-bold tracking-tight text-white">Welcome back, Commander.</h1>
+                <p class="text-gray-400 mt-1">Here is the latest overview of the VA Pilot Service system.</p>
+            </header>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                
+                <div class="space-y-6">
+                    <div class="bg-black/40 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-sm font-medium text-gray-400 uppercase tracking-wider">Completed Orders</h2>
+                            <div class="p-2 bg-brand-pink/10 rounded-lg text-brand-pink border border-brand-pink/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                        </div>
+                        <div class="text-4xl font-bold text-white" id="completed-orders-count">0</div>
+                        <div class="text-xs text-gray-400 mt-2">Live total from completed order records.</div>
+                    </div>
+                    <a href="admin-users.html" class="inline-flex w-full items-center justify-center rounded-lg border border-brand-purple/30 bg-brand-purple/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-brand-purple hover:bg-brand-purple/20 transition-all">
+                        View Customers
+                    </a>
+                </div>
+
+                <div class="xl:col-span-2">
+                    <div class="bg-black/40 backdrop-blur-md border border-white/10 p-8 rounded-2xl shadow-xl relative overflow-hidden">
+                        
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-pink/5 rounded-full filter blur-[80px] pointer-events-none"></div>
+
+                        <div class="flex justify-between items-center mb-8 relative z-10">
+                            <h2 class="text-xl font-bold tracking-tight flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-brand-pink"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+                                Payment Receiver Info
+                            </h2>
+                            
+                            <button id="btn-toggle-edit" class="text-sm bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-semibold">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>
+                                Edit Details
+                            </button>
+                        </div>
+
+                        <div id="view-mode" class="flex flex-col md:flex-row gap-8 items-center md:items-start relative z-10">
+                            <div class="w-48 h-48 bg-[#150723] border-4 border-black/50 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0 shadow-[0_0_30px_rgba(224,0,255,0.15)] relative">
+                                <img id="display-qr" src="https://via.placeholder.com/200?text=No+QR+Set" alt="Admin QR Code" class="w-full h-full object-cover">
+                            </div>
+                            
+                            <div class="flex-1 space-y-6 w-full text-center md:text-left mt-2">
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Receiver Name</p>
+                                    <p id="display-name" class="text-3xl font-bold text-white tracking-tight">John Admin</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Account / Phone Number</p>
+                                    <p id="display-number" class="text-xl font-mono text-brand-pink bg-brand-pink/5 px-4 py-2 rounded-lg inline-block border border-brand-pink/10">09123456789</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="edit-mode" class="hidden space-y-6 relative z-10">
+                            <div class="flex flex-col md:flex-row gap-8">
+                                <div class="w-48 flex-shrink-0">
+                                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Upload QR Code</label>
+                                    <div class="relative w-48 h-48 bg-[#150723] border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center hover:border-brand-pink cursor-pointer transition-colors group overflow-hidden">
+                                        <input type="file" id="input-qr" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                                        <img id="preview-qr" src="https://via.placeholder.com/200?text=No+QR+Set" class="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-10 transition-opacity">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-gray-400 group-hover:text-brand-pink mb-2 z-0 relative"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+                                        <span class="text-xs font-semibold text-gray-400 group-hover:text-white z-0 relative">Click to Browse</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex-1 space-y-5">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Receiver Name</label>
+                                        <input type="text" id="input-name" placeholder="Letters and spaces only (Max 30)" class="w-full bg-[#150723] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
+                                        <p id="error-name" class="text-red-400 text-xs mt-2 hidden bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded inline-block">Must be letters/spaces only, max 30 characters.</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Account Number</label>
+                                        <input type="text" id="input-number" placeholder="Numbers only" class="w-full bg-[#150723] border border-white/10 rounded-xl px-4 py-3 text-white font-mono placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
+                                        <p id="error-number" class="text-red-400 text-xs mt-2 hidden bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded inline-block">Must contain numbers only.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-4 justify-end border-t border-white/10 pt-6">
+                                <button type="button" id="btn-cancel" class="px-6 py-2.5 rounded-lg font-semibold text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-white/10">Cancel</button>
+                                <button type="submit" class="bg-gradient-to-r from-brand-pink to-brand-purple hover:scale-105 text-white font-bold text-sm px-8 py-2.5 rounded-lg transition-all shadow-[0_0_15px_rgba(224,0,255,0.3)]">Save Changes</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+
+        async function apiJson(path, options = {}) {
+            const response = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+            if (!response.ok || data.ok === false) {
+                throw new Error(data.error || `Request failed (${response.status})`);
+            }
+            return data;
+        }
+
+        async function refreshDashboardStats() {
+            try {
+                const payload = await apiJson('/api/orders');
+                const allOrders = payload.orders || [];
+                const completed = allOrders.filter((o) => o.status === 'Completed').length;
+                document.getElementById('completed-orders-count').textContent = String(completed);
+            } catch (err) {
+                document.getElementById('completed-orders-count').textContent = '0';
+            }
+        }
+
+        // DOM Elements
+        const viewMode = document.getElementById('view-mode');
+        const editMode = document.getElementById('edit-mode');
+        const btnToggleEdit = document.getElementById('btn-toggle-edit');
+        const btnCancel = document.getElementById('btn-cancel');
+        
+        // Display Elements
+        const displayName = document.getElementById('display-name');
+        const displayNumber = document.getElementById('display-number');
+        const displayQr = document.getElementById('display-qr');
+
+        // Input Elements
+        const inputName = document.getElementById('input-name');
+        const inputNumber = document.getElementById('input-number');
+        const inputQr = document.getElementById('input-qr');
+        const previewQr = document.getElementById('preview-qr');
+        
+        // Error Elements
+        const errorName = document.getElementById('error-name');
+        const errorNumber = document.getElementById('error-number');
+
+        let isEditing = false;
+        let base64Image = null; // Store uploaded image data
+
+        // Load existing data from localStorage (if any)
+        function loadPaymentInfo() {
+            const savedInfo = JSON.parse(localStorage.getItem('va_admin_payment'));
+            if (savedInfo) {
+                displayName.textContent = savedInfo.name;
+                displayNumber.textContent = savedInfo.number;
+                if (savedInfo.qr) {
+                    displayQr.src = savedInfo.qr;
+                    previewQr.src = savedInfo.qr;
+                    base64Image = savedInfo.qr;
+                }
+            }
+        }
+        
+        loadPaymentInfo();
+        refreshDashboardStats();
+
+        // Toggle Edit Mode Function
+        function toggleEdit() {
+            isEditing = !isEditing;
+            
+            if (isEditing) {
+                // Populate inputs with current display values
+                inputName.value = displayName.textContent;
+                inputNumber.value = displayNumber.textContent;
+                
+                viewMode.classList.add('hidden');
+                editMode.classList.remove('hidden');
+                btnToggleEdit.classList.add('hidden'); // Hide edit button while editing
+                
+                // Reset Errors
+                errorName.classList.add('hidden');
+                errorNumber.classList.add('hidden');
+                inputName.classList.remove('border-red-500');
+                inputNumber.classList.remove('border-red-500');
+            } else {
+                viewMode.classList.remove('hidden');
+                editMode.classList.add('hidden');
+                btnToggleEdit.classList.remove('hidden');
+            }
+        }
+
+        btnToggleEdit.addEventListener('click', toggleEdit);
+        btnCancel.addEventListener('click', toggleEdit);
+
+        // Handle Image Upload Preview
+        inputQr.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    base64Image = event.target.result;
+                    previewQr.src = base64Image;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle Save & Validation
+        editMode.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nameVal = inputName.value.trim();
+            const numberVal = inputNumber.value.trim();
+            
+            let isValid = true;
+
+            // Name Validation: Letters and spaces only, max 30 chars
+            const nameRegex = /^[A-Za-z\s]{1,30}$/;
+            if (!nameRegex.test(nameVal)) {
+                errorName.classList.remove('hidden');
+                inputName.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                errorName.classList.add('hidden');
+                inputName.classList.remove('border-red-500');
+            }
+
+            // Number Validation: Numbers only
+            const numberRegex = /^\d+$/;
+            if (!numberRegex.test(numberVal)) {
+                errorNumber.classList.remove('hidden');
+                inputNumber.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                errorNumber.classList.add('hidden');
+                inputNumber.classList.remove('border-red-500');
+            }
+
+            // If everything passes, save and update UI
+            if (isValid) {
+                // Update UI Display
+                displayName.textContent = nameVal;
+                displayNumber.textContent = numberVal;
+                if (base64Image) {
+                    displayQr.src = base64Image;
+                }
+
+                // Save to localStorage so it persists across refreshes
+                // Customers can pull from this same key when paying!
+                localStorage.setItem('va_admin_payment', JSON.stringify({
+                    name: nameVal,
+                    number: numberVal,
+                    qr: base64Image
+                }));
+
+                // Close edit mode
+                toggleEdit();
+            }
+        });
+    </script>
+    <script src="sidebar-active.js"></script>
+</body>
+</html>
+
+
+
+

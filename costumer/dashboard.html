@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commander Dashboard | VA Pilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'brand-bg': '#0f0518',
+                        'brand-pink': '#e000ff',
+                        'brand-purple': '#7a00ff',
+                        'brand-blue': '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex relative overflow-hidden">
+
+    <div class="fixed inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
+    <div class="fixed top-[-10%] right-[-5%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none z-0"></div>
+
+    <aside class="w-64 h-full flex flex-col bg-[#150723]/90 backdrop-blur-2xl border-r border-white/10 relative z-20 hidden md:flex shrink-0">
+        <div class="p-6 border-b border-white/10 flex items-center gap-2">
+            <span class="text-brand-pink text-3xl font-bold leading-none">VA</span>
+            <span class="text-white text-sm font-bold tracking-widest mt-1 leading-tight">PILOT<br>PORTAL</span>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-blue/10 text-brand-blue border border-brand-blue/20 shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
+                <span class="font-semibold tracking-wide text-sm">Dashboard</span>
+            </a>
+            
+            <a href="orders.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="font-medium tracking-wide text-sm">My Orders</span>
+            </a>
+            
+            <a href="place-order.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.452.15.15 0 00-.063-.04m2.286 2.285c.103-.021.207-.04.311-.06m-2.286-2.285a15.09 15.09 0 012.448 2.452.15.15 0 00.063.04" /></svg>
+                <span class="font-medium tracking-wide text-sm">Place Order</span>
+            </a>
+            
+            <a href="profile.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 12.839c-.066.214-.1.437-.1.661z" /></svg>
+                <span class="font-medium tracking-wide text-sm">Profile</span>
+            </a>
+            
+            <a href="notifications.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.08 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                <span class="font-medium tracking-wide text-sm">Notifications</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-white/10 mt-auto">
+            <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-white hover:bg-red-500/20 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                <span class="font-medium tracking-wide text-sm">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto z-10 p-6 md:px-10">
+        <div class="max-w-6xl w-full mx-auto py-6">
+            
+            <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white">Welcome back, <br><span id="user-name-display" class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500">Commander</span>.</h1>
+                </div>
+                <a href="place-order.html" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-blue to-brand-purple hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] text-sm uppercase tracking-widest">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Request Pilot
+                </a>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-[#150723]/50 backdrop-blur-md border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+                    <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">My Active Orders</div>
+                    <div class="text-4xl font-black text-white" id="stat-active">0</div>
+                    <div class="absolute -right-4 -bottom-4 opacity-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-24 h-24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                    </div>
+                </div>
+                <div class="bg-[#150723]/50 backdrop-blur-md border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+                    <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Admin Successful Orders</div>
+                    <div class="text-4xl font-black text-white" id="stat-completed">0</div>
+                    <div class="absolute -right-4 -bottom-4 opacity-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-24 h-24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-[#150723]/80 to-brand-purple/20 backdrop-blur-md border border-brand-purple/30 rounded-2xl p-6 relative overflow-hidden shadow-[0_0_20px_rgba(122,0,255,0.1)]">
+                    <div class="text-brand-purple text-xs font-bold uppercase tracking-widest mb-2">Account Status</div>
+                    <div class="text-2xl font-black text-white mt-1" id="user-status-display">Unverified</div>
+                    <div class="text-xs text-gray-300 mt-2 font-mono" id="user-email-display">user@email.com</div>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-xl font-bold tracking-tight text-white mb-6 border-b border-white/10 pb-4">Current Active Protocols</h2>
+                <div id="customer-orders-list" class="space-y-4">
+                    </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+
+        async function apiJson(path, options = {}) {
+            const response = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+            if (!response.ok || data.ok === false) {
+                throw new Error(data.error || `Request failed (${response.status})`);
+            }
+            return data;
+        }
+
+        let currentUser = JSON.parse(localStorage.getItem('va_pilot_current_user'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else {
+            bootstrapDashboard();
+        }
+
+        async function bootstrapDashboard() {
+            try {
+                const email = String(currentUser.email || '').trim().toLowerCase();
+                const userPayload = await apiJson(`/api/users/${encodeURIComponent(email)}`);
+                currentUser = userPayload.user || currentUser;
+                localStorage.setItem('va_pilot_current_user', JSON.stringify(currentUser));
+
+                const displayName = currentUser.fullname || currentUser.name || currentUser.email.split('@')[0];
+                document.getElementById('user-name-display').innerText = displayName;
+                document.getElementById('user-email-display').innerText = currentUser.email;
+                document.getElementById('user-status-display').innerText = currentUser.verified ? 'Verified' : 'Unverified';
+
+                await loadUserOrders(currentUser.email);
+            } catch (err) {
+                alert(err.message || 'Unable to load dashboard data.');
+            }
+        }
+
+        async function loadUserOrders(userEmail) {
+            const container = document.getElementById('customer-orders-list');
+            const normalizedUserEmail = String(userEmail || '').trim().toLowerCase();
+            const payload = await apiJson(`/api/orders?customerEmail=${encodeURIComponent(normalizedUserEmail)}`);
+            const userOrders = payload.orders || [];
+
+            const activeOrders = userOrders.filter((o) => !['Completed', 'Cancelled', 'Declined', 'Disapproved'].includes(o.status));
+            const completedOrders = userOrders.filter((o) => o.status === 'Completed');
+            document.getElementById('stat-active').innerText = activeOrders.length;
+            document.getElementById('stat-completed').innerText = completedOrders.length;
+
+            if (userOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-black/40 border border-white/10 rounded-2xl p-10 text-center">
+                        <span class="text-gray-500 font-bold uppercase tracking-widest text-xs">No active missions found. Request a pilot to begin.</span>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            userOrders.slice().reverse().forEach((order) => {
+                let statusColor = "text-yellow-400 border-yellow-400/30 bg-yellow-400/10";
+                if (order.status === "Gaming Started" || order.status === "In Progress") statusColor = "text-brand-pink border-brand-pink/30 bg-cyan-500/10";
+                if (order.status === "Completed") statusColor = "text-green-400 border-green-400/30 bg-green-400/10";
+
+                const card = document.createElement('div');
+                card.className = "bg-[#150723]/50 backdrop-blur-md border border-white/5 hover:border-white/20 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all";
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-black/50 border border-white/10 flex items-center justify-center text-white font-bold text-lg">
+                            ${order.game ? order.game.charAt(0).toUpperCase() : 'G'}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-mono text-gray-400 tracking-widest uppercase">MSR-${order.id || '-'}</span>
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest border ${statusColor}">${order.status || 'Pending'}</span>
+                            </div>
+                            <div class="font-bold text-white">${order.game || 'Game Boost'}</div>
+                            <div class="text-xs text-gray-400 mt-1">Target: <span class="text-gray-200">${order.targetRank || 'N/A'}</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 border-t md:border-t-0 border-white/10 pt-4 md:pt-0">
+                        <div class="text-right">
+                            <span class="block text-[9px] text-gray-500 uppercase font-bold tracking-widest">Total Cost</span>
+                            <span class="text-sm font-bold text-brand-pink">₱${order.totalPrice || '0'}</span>
+                        </div>
+                        <a href="orders.html" class="bg-white/5 hover:bg-white/10 border border-white/10 p-2.5 rounded-lg text-white transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785 0.5.5 0 00.37.818 9.03 9.03 0 003.748-.976c.5-.27.428-.593.633-.74a9.385 9.385 0 014.313-1.048z" /></svg>
+                        </a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
+    <script src="chat-widget.js"></script>
+    <script src="sidebar-active.js"></script>
+</body>
+</html>
+
