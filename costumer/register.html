@@ -23,6 +23,48 @@
             }
         }
     </script>
+  <style>
+    #page-loader {
+      position: fixed;
+      left: 50%;
+      top: 24px;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      color: #1a1a1a;
+      z-index: 9999;
+    }
+    #page-loader .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(26, 26, 26, 0.2);
+      border-top-color: #1a1a1a;
+      border-radius: 50%;
+      animation: pageLoaderSpin 0.9s linear infinite;
+    }
+    #page-loader .label {
+      font-size: 14px;
+      letter-spacing: 0.2px;
+    }
+    #page-loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    @keyframes pageLoaderSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex items-center justify-center relative overflow-hidden">
 
@@ -115,7 +157,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="auth-otp.js"></script>
     <script>
-        const API_BASE = 'http://127.0.0.1:5000';
+        const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
 
         async function apiJson(path, options = {}) {
             const response = await fetch(`${API_BASE}${path}`, {
@@ -231,5 +273,20 @@
         });
     </script>
     <script src="chat-widget.js"></script>
+  <div id="page-loader" role="status" aria-live="polite" aria-busy="true">
+    <div class="spinner" aria-hidden="true"></div>
+    <span class="label">Loading...</span>
+  </div>
+  <script>
+    window.addEventListener("load", function () {
+      var loader = document.getElementById("page-loader");
+      if (!loader) return;
+      loader.classList.add("hidden");
+      setTimeout(function () {
+        if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+      }, 250);
+    });
+  </script>
 </body>
 </html>
+
