@@ -189,14 +189,6 @@ app.get("/api/health", async (req, res) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.json({
-    ok: true,
-    service: "va-pilot-backend",
-    message: "API is running",
-  });
-});
-
 async function handleRegister(req, res) {
   try {
     const fullname = String(req.body.fullname || req.body.name || "").trim();
