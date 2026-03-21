@@ -11,7 +11,7 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/va_psm";
 
 app.use(cors());
 app.use(express.json({ limit: "25mb" }));
-app.use(express.static(path.join(__dirname, '../')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 
 function normalizeEmail(email) {
@@ -853,7 +853,7 @@ app.post("/api/feedback", async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 async function ensureCollections() {
