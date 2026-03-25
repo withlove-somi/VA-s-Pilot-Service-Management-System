@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:id="@+id/menu_group_main" android:checkableBehavior="single">
+        <item android:id="@+id/nav_dashboard" android:title="Dashboard" />
+        <item android:id="@+id/nav_place_order" android:title="Place New Order" />
+        <item android:id="@+id/nav_orders" android:title="My Orders" />
+    </group>
+
+    <item android:title="Account &amp; Alerts">
+        <menu>
+            <group android:id="@+id/menu_group_account" android:checkableBehavior="single">
+                <item android:id="@+id/nav_payment" android:title="Payment Portal" />
+                <item android:id="@+id/nav_notifications" android:title="Notifications" />
+                <item android:id="@+id/nav_profile" android:title="My Profile" />
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="Support">
+        <menu>
+            <group android:id="@+id/menu_group_support" android:checkableBehavior="single">
+                <item android:id="@+id/nav_feedback" android:title="Send Feedback" />
+                <item android:id="@+id/nav_logout" android:title="Logout" />
+            </group>
+        </menu>
+    </item>
+</menu>

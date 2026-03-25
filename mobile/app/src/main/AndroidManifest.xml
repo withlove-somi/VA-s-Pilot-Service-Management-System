@@ -1,0 +1,29 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:label="VA Pilot Service Mobile"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.VaPilotService">
+
+        <activity android:name=".FeedbackActivity" />
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".NotificationsActivity" />
+        <activity android:name=".PaymentActivity" />
+        <activity android:name=".OrdersActivity" />
+        <activity android:name=".PlaceOrderActivity" />
+        <activity android:name=".DashboardActivity" />
+        <activity android:name=".ResetPasswordActivity" />
+        <activity android:name=".ForgotPasswordActivity" />
+        <activity android:name=".VerifyOtpActivity" />
+        <activity android:name=".RegisterActivity" />
+        <activity android:name=".LoginActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
