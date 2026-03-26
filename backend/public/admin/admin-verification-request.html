@@ -86,6 +86,7 @@
   <script>
     const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
     let requestsCache = [];
+    let userNameByEmail = new Map();
 
     async function apiJson(path, options = {}) {
       const response = await fetch(`${API_BASE}${path}`, {
@@ -146,8 +147,19 @@
     async function render() {
       const container = document.getElementById('requests');
       try {
-        const payload = await apiJson('/api/verifications');
-        requestsCache = payload.requests || [];
+        const [verificationPayload, usersPayload] = await Promise.all([
+          apiJson('/api/verifications'),
+          apiJson('/api/users').catch(() => ({ users: [] }))
+        ]);
+        requestsCache = verificationPayload.requests || [];
+        userNameByEmail = new Map(
+          (usersPayload.users || [])
+            .map((u) => [
+              String(u.email || '').trim().toLowerCase(),
+              String(u.fullname || u.name || '').trim()
+            ])
+            .filter(([email, name]) => email && name)
+        );
       } catch (err) {
         container.innerHTML = `<div class="p-8 rounded-xl border border-red-500/20 bg-black/30 text-red-300">Unable to load verification requests: ${err.message || 'Request failed'}</div>`;
         return;
@@ -164,6 +176,8 @@
 
       container.innerHTML = '';
       list.slice().reverse().forEach((r) => {
+        const email = String(r.userEmail || '').trim().toLowerCase();
+        const displayName = String(r.fullName || r.fullname || r.name || userNameByEmail.get(email) || '').trim() || 'Unknown User';
         const statusColor = r.status === 'Approved'
           ? 'text-green-400 border-green-400/30 bg-green-400/10'
           : r.status === 'Rejected'
@@ -175,7 +189,7 @@
         card.innerHTML = `
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
             <div>
-              <div class="text-lg font-bold">${r.fullName || r.userEmail || 'Unknown User'}</div>
+              <div class="text-lg font-bold">${displayName}</div>
               <div class="text-sm text-gray-400">${r.userEmail || 'No email'}</div>
             </div>
             <span class="px-3 py-1 rounded border text-xs font-bold uppercase tracking-wider ${statusColor}">${r.status || 'Pending'}</span>
