@@ -2,9 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
-
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+
+
 const PORT = Number(process.env.PORT) || 5000;
 // Use Atlas when provided, fallback to local for development.
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/va_psm";
@@ -722,6 +727,8 @@ app.patch("/api/notifications/:id/read", async (req, res) => {
   }
 });
 
+
+
 app.get("/api/verifications", async (req, res) => {
   try {
     const filter = {};
@@ -805,6 +812,16 @@ app.patch("/api/verifications/:id/status", async (req, res) => {
   }
 });
 
+io.on("connection", (socket) => {
+  console.log("User connected to chat:", socket.id);
+
+  socket.on("joinChat", (userEmail) => {
+    const email = normalizeEmail(userEmail);
+    socket.join(email);
+  });
+});
+
+
 app.get("/api/messages", async (req, res) => {
   try {
     const userEmail = normalizeEmail(req.query.userEmail);
@@ -826,6 +843,15 @@ app.post("/api/messages", async (req, res) => {
     if (!userEmail || !message) return clientError(res, "userEmail and message are required");
 
     const chatMessage = await ChatMessage.create({ userEmail, sender, message });
+    
+    // Broadcast the new message to everyone in this user's chat room
+    io.to(userEmail).emit("newMessage", chatMessage);
+    
+    // Alert the admin dashboard if the customer sent it
+    if (sender === "customer") {
+      io.emit("adminAlert", chatMessage);
+    }
+
     res.status(201).json({ ok: true, message: chatMessage });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -890,7 +916,7 @@ async function start() {
     await mongoose.connect(MONGO_URI);
     await ensureCollections();
     await seedAdminIfMissing();
-    app.listen(PORT, "0.0.0.0", () => {
+    server.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`MongoDB connected successfully! (URI hidden for security)`);
       console.log(`MongoDB database: ${mongoose.connection?.name || "unknown"}`);
