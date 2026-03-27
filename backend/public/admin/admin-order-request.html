@@ -114,8 +114,8 @@
                 return;
             }
 
-            // FILTER: Only show new orders that have no status or are marked 'Order Request'
-            const activeOrders = ordersCache.filter(order => !order.status || order.status === 'Order Request');
+            // FILTER: Only show new orders pending approval
+            const activeOrders = ordersCache.filter(order => !order.status || order.status === 'pending_approval');
 
             if (activeOrders.length === 0) {
                 container.innerHTML = `<div class="bg-black/40 border border-white/10 rounded-2xl p-12 text-center text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">No new order requests in queue.</div>`;
@@ -126,9 +126,9 @@
 
             activeOrders.forEach(order => {
                 const statusColor = "text-yellow-400 border-yellow-400/20 bg-yellow-400/5";
-                const currentStatus = order.status || "Order Request";
+                const currentStatus = order.status || "pending_approval";
                 const adminActions = `
-                    <button onclick="updateStatus('${order.id}', 'Order Accepted')" class="w-full px-8 py-3 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(122,0,255,0.2)]">Accept Mission</button>
+                    <button onclick="updateStatus('${order.id}', 'awaiting_payment')" class="w-full px-8 py-3 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(122,0,255,0.2)]">Accept Mission</button>
                     <button onclick="declineOrder('${order.id}')" class="w-full px-8 py-3 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">Decline</button>
                 `;
 
@@ -248,7 +248,7 @@
             try {
                 await apiJson(`/api/orders/${encodeURIComponent(orderId)}/status`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ status: 'Declined', declineReason: reason.trim() })
+                    body: JSON.stringify({ status: 'declined_order', declineReason: reason.trim() })
                 });
                 await loadAdminOrders();
             } catch (err) {

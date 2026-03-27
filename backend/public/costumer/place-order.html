@@ -592,7 +592,7 @@
                 notes: document.getElementById('notes').value || "None",
                 paymentMode: document.getElementById('payment-mode').options[document.getElementById('payment-mode').selectedIndex].text,
                 totalPrice: document.getElementById('total-price').textContent,
-                status: 'Order Request' // Updated to trigger your specific customer flow logic
+                status: 'pending_approval' // Updated to trigger your specific customer flow logic
             };
 
             try {

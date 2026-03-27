@@ -37,6 +37,109 @@ function parseNumberLike(value, defaultValue = 0) {
   return defaultValue;
 }
 
+const ORDER_STATUSES = {
+  PENDING_APPROVAL: "pending_approval",
+  AWAITING_PAYMENT: "awaiting_payment",
+  PAYMENT_SUBMITTED: "payment_submitted",
+  IN_PROGRESS: "in_progress",
+  COMPLETED: "completed",
+  DECLINED_ORDER: "declined_order",
+  CANCELLED: "cancelled",
+  EXPIRED: "expired",
+};
+
+const TERMINAL_ORDER_STATUSES = new Set([
+  ORDER_STATUSES.COMPLETED,
+  ORDER_STATUSES.DECLINED_ORDER,
+  ORDER_STATUSES.CANCELLED,
+  ORDER_STATUSES.EXPIRED,
+]);
+
+function addStatusHistory(order, status, note = "") {
+  if (!order) return;
+  order.statusHistory = order.statusHistory || [];
+  order.statusHistory.push({
+    status,
+    changedAt: new Date(),
+    note: note || "",
+  });
+}
+
+function nowPlusHours(hours) {
+  return new Date(Date.now() + hours * 60 * 60 * 1000);
+}
+
+async function expireOverdueOrders() {
+  const now = new Date();
+  await Order.updateMany(
+    {
+      status: ORDER_STATUSES.AWAITING_PAYMENT,
+      paymentDueAt: { $lte: now },
+    },
+    {
+      $set: { status: ORDER_STATUSES.EXPIRED },
+      $push: {
+        statusHistory: {
+          status: ORDER_STATUSES.EXPIRED,
+          changedAt: now,
+          note: "Payment window expired.",
+        },
+      },
+    }
+  );
+}
+
+async function migrateLegacyOrderStatuses() {
+  const now = new Date();
+  await Order.updateMany(
+    { status: "Order Request" },
+    { $set: { status: ORDER_STATUSES.PENDING_APPROVAL } }
+  );
+  await Order.updateMany(
+    { status: "Order Accepted" },
+    {
+      $set: {
+        status: ORDER_STATUSES.AWAITING_PAYMENT,
+        paymentDueAt: nowPlusHours(24),
+      },
+    }
+  );
+  await Order.updateMany(
+    { status: "Payment Sent" },
+    {
+      $set: {
+        status: ORDER_STATUSES.PAYMENT_SUBMITTED,
+        paymentSubmittedAt: now,
+      },
+      $unset: { paymentDueAt: "" },
+    }
+  );
+  await Order.updateMany(
+    { status: "Payment Verified" },
+    { $set: { status: ORDER_STATUSES.IN_PROGRESS } }
+  );
+  await Order.updateMany(
+    { status: "Gaming Started" },
+    { $set: { status: ORDER_STATUSES.IN_PROGRESS } }
+  );
+  await Order.updateMany(
+    { status: "Completed" },
+    { $set: { status: ORDER_STATUSES.COMPLETED } }
+  );
+  await Order.updateMany(
+    { status: "Declined" },
+    { $set: { status: ORDER_STATUSES.DECLINED_ORDER } }
+  );
+  await Order.updateMany(
+    { status: "Disapproved" },
+    { $set: { status: ORDER_STATUSES.CANCELLED } }
+  );
+  await Order.updateMany(
+    { status: "Cancelled" },
+    { $set: { status: ORDER_STATUSES.CANCELLED } }
+  );
+}
+
 const userSchema = new mongoose.Schema(
   {
     fullname: { type: String, trim: true },
@@ -88,12 +191,34 @@ const orderSchema = new mongoose.Schema(
     totalPrice: { type: Number, default: 0 },
     notes: { type: String, trim: true },
     paymentMode: { type: String, trim: true },
-    status: { type: String, default: "Order Request" },
+    status: {
+      type: String,
+      enum: [
+        "pending_approval",
+        "awaiting_payment",
+        "payment_submitted",
+        "in_progress",
+        "completed",
+        "declined_order",
+        "cancelled",
+        "expired",
+      ],
+      default: "pending_approval",
+    },
+    paymentDueAt: { type: Date },
+    paymentSubmittedAt: { type: Date },
     paymentReference: { type: String, trim: true },
     receiptImage: { type: String },
     paymentDate: { type: Date },
     latestTransactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
     declineReason: { type: String, trim: true },
+    statusHistory: [
+      {
+        status: { type: String, trim: true },
+        changedAt: { type: Date, default: Date.now },
+        note: { type: String, trim: true },
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -449,6 +574,7 @@ app.patch("/api/users/:email/admin-action", async (req, res) => {
 
 app.get("/api/orders", async (req, res) => {
   try {
+    await expireOverdueOrders();
     const filter = {};
     if (req.query.customerEmail) {
       filter.customerEmail = normalizeEmail(req.query.customerEmail);
@@ -476,6 +602,16 @@ app.post("/api/orders", async (req, res) => {
       customerVerified: Boolean(req.body.customerVerified),
       starsNeeded: parseNumberLike(req.body.starsNeeded, 0),
       totalPrice: parseNumberLike(req.body.totalPrice, 0),
+      status: ORDER_STATUSES.PENDING_APPROVAL,
+      paymentDueAt: undefined,
+      paymentSubmittedAt: undefined,
+      statusHistory: [
+        {
+          status: ORDER_STATUSES.PENDING_APPROVAL,
+          changedAt: new Date(),
+          note: "Order placed by customer.",
+        },
+      ],
     };
 
     const order = await Order.create(payload);
@@ -517,8 +653,19 @@ app.post("/api/transactions", async (req, res) => {
     const orderId = String(req.body.orderId || "").trim();
     if (!orderId) return clientError(res, "orderId is required");
 
-    const order = await Order.findOne({ id: orderId }).lean();
+    const order = await Order.findOne({ id: orderId });
     if (!order) return clientError(res, "Order not found", 404);
+
+    if (order.status !== ORDER_STATUSES.AWAITING_PAYMENT) {
+      return clientError(res, "Order is not awaiting payment", 409);
+    }
+
+    if (order.paymentDueAt && order.paymentDueAt <= new Date()) {
+      order.status = ORDER_STATUSES.EXPIRED;
+      addStatusHistory(order, ORDER_STATUSES.EXPIRED, "Payment window expired.");
+      await order.save();
+      return clientError(res, "Order payment window has expired", 409);
+    }
 
     const paymentReference = String(req.body.paymentReference || req.body.receiptNumber || "").trim();
     const receiptImage = req.body.receiptImage || "";
@@ -535,17 +682,15 @@ app.post("/api/transactions", async (req, res) => {
       status: "Submitted",
     });
 
-    const updatedOrder = await Order.findOneAndUpdate(
-      { id: orderId },
-      {
-        status: "Payment Sent",
-        paymentReference,
-        receiptImage,
-        paymentDate: new Date(),
-        latestTransactionId: transaction._id,
-      },
-      { new: true }
-    ).lean();
+    order.status = ORDER_STATUSES.PAYMENT_SUBMITTED;
+    order.paymentReference = paymentReference;
+    order.receiptImage = receiptImage;
+    order.paymentDate = new Date();
+    order.paymentSubmittedAt = new Date();
+    order.paymentDueAt = undefined;
+    order.latestTransactionId = transaction._id;
+    addStatusHistory(order, ORDER_STATUSES.PAYMENT_SUBMITTED, "Payment proof submitted.");
+    await order.save();
 
     await addNotification(
       order.customerEmail,
@@ -554,7 +699,7 @@ app.post("/api/transactions", async (req, res) => {
       "payment"
     );
 
-    res.status(201).json({ ok: true, transaction, order: updatedOrder });
+    res.status(201).json({ ok: true, transaction, order: order.toObject() });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -580,17 +725,19 @@ app.patch("/api/transactions/:id/status", async (req, res) => {
 
     if (!transaction) return clientError(res, "Transaction not found", 404);
 
-    if (status === "Approved") {
-      await Order.updateOne(
-        { id: transaction.orderId },
-        { status: "Payment Verified" }
-      );
-    }
-    if (status === "Rejected") {
-      await Order.updateOne(
-        { id: transaction.orderId },
-        { status: "Disapproved" }
-      );
+    const order = await Order.findOne({ id: transaction.orderId });
+    if (order) {
+      if (status === "Approved") {
+        order.status = ORDER_STATUSES.IN_PROGRESS;
+        addStatusHistory(order, ORDER_STATUSES.IN_PROGRESS, "Payment approved.");
+      }
+      if (status === "Rejected") {
+        order.status = ORDER_STATUSES.AWAITING_PAYMENT;
+        order.paymentDueAt = nowPlusHours(24);
+        order.paymentSubmittedAt = undefined;
+        addStatusHistory(order, ORDER_STATUSES.AWAITING_PAYMENT, "Payment rejected. New window granted.");
+      }
+      await order.save();
     }
 
     res.json({ ok: true, transaction });
@@ -602,28 +749,87 @@ app.patch("/api/transactions/:id/status", async (req, res) => {
 app.patch("/api/orders/:id/status", async (req, res) => {
   try {
     const id = String(req.params.id || "").trim();
-    const status = String(req.body.status || "").trim();
-    if (!status) return clientError(res, "status is required");
+    const nextStatus = String(req.body.status || "").trim();
+    const declineReason = String(req.body.declineReason || "").trim();
+    if (!nextStatus) return clientError(res, "status is required");
 
-    const order = await Order.findOneAndUpdate(
-      { id },
-      { status, declineReason: req.body.declineReason || undefined },
-      { new: true }
-    ).lean();
-
+    const order = await Order.findOne({ id });
     if (!order) return clientError(res, "Order not found", 404);
 
-    if (status === "Payment Verified" || status === "Disapproved") {
+    if (
+      order.status === ORDER_STATUSES.AWAITING_PAYMENT &&
+      order.paymentDueAt &&
+      order.paymentDueAt <= new Date()
+    ) {
+      order.status = ORDER_STATUSES.EXPIRED;
+      addStatusHistory(order, ORDER_STATUSES.EXPIRED, "Payment window expired.");
+      await order.save();
+      return clientError(res, "Order payment window has expired", 409);
+    }
+
+    const current = order.status || ORDER_STATUSES.PENDING_APPROVAL;
+    const allowed = new Set();
+
+    if (current === ORDER_STATUSES.PENDING_APPROVAL) {
+      allowed.add(ORDER_STATUSES.AWAITING_PAYMENT);
+      allowed.add(ORDER_STATUSES.DECLINED_ORDER);
+      allowed.add(ORDER_STATUSES.CANCELLED);
+    } else if (current === ORDER_STATUSES.AWAITING_PAYMENT) {
+      allowed.add(ORDER_STATUSES.PAYMENT_SUBMITTED);
+      allowed.add(ORDER_STATUSES.CANCELLED);
+      allowed.add(ORDER_STATUSES.EXPIRED);
+    } else if (current === ORDER_STATUSES.PAYMENT_SUBMITTED) {
+      allowed.add(ORDER_STATUSES.IN_PROGRESS); // accept payment
+      allowed.add(ORDER_STATUSES.AWAITING_PAYMENT); // reject receipt (retry)
+      allowed.add(ORDER_STATUSES.CANCELLED); // decline completely
+    } else if (current === ORDER_STATUSES.IN_PROGRESS) {
+      allowed.add(ORDER_STATUSES.COMPLETED);
+    }
+
+    if (!allowed.has(nextStatus)) {
+      return clientError(
+        res,
+        `Invalid status transition from ${current} to ${nextStatus}`,
+        409
+      );
+    }
+
+    if (nextStatus === ORDER_STATUSES.AWAITING_PAYMENT) {
+      order.paymentDueAt = nowPlusHours(24);
+      order.paymentSubmittedAt = undefined;
+    }
+    if (nextStatus === ORDER_STATUSES.PAYMENT_SUBMITTED) {
+      order.paymentSubmittedAt = new Date();
+      order.paymentDueAt = undefined;
+    }
+    if (nextStatus === ORDER_STATUSES.DECLINED_ORDER) {
+      order.declineReason = declineReason || undefined;
+    }
+    if (nextStatus === ORDER_STATUSES.CANCELLED) {
+      order.declineReason = declineReason || undefined;
+    }
+
+    order.status = nextStatus;
+    addStatusHistory(order, nextStatus, declineReason || "");
+
+    await order.save();
+
+    if (
+      nextStatus === ORDER_STATUSES.IN_PROGRESS ||
+      nextStatus === ORDER_STATUSES.AWAITING_PAYMENT ||
+      nextStatus === ORDER_STATUSES.CANCELLED
+    ) {
       const latest = await Transaction.findOne({ orderId: id })
         .sort({ createdAt: -1 })
         .lean();
       if (latest) {
+        let txnStatus = latest.status;
+        if (nextStatus === ORDER_STATUSES.IN_PROGRESS) txnStatus = "Approved";
+        if (nextStatus === ORDER_STATUSES.AWAITING_PAYMENT) txnStatus = "Rejected";
+        if (nextStatus === ORDER_STATUSES.CANCELLED) txnStatus = "Rejected";
         await Transaction.updateOne(
           { _id: latest._id },
-          {
-            status: status === "Payment Verified" ? "Approved" : "Rejected",
-            reviewedAt: new Date(),
-          }
+          { status: txnStatus, reviewedAt: new Date() }
         );
       }
     }
@@ -631,7 +837,7 @@ app.patch("/api/orders/:id/status", async (req, res) => {
     await addNotification(
       order.customerEmail,
       "Order Update",
-      `Order ${order.id} status changed to ${status}.`,
+      `Order ${order.id} status changed to ${nextStatus}.`,
       "order"
     );
 
@@ -649,18 +855,28 @@ app.patch("/api/orders/:id/payment", async (req, res) => {
 
     if (!paymentReference) return clientError(res, "paymentReference is required");
 
-    const order = await Order.findOneAndUpdate(
-      { id },
-      {
-        paymentReference,
-        receiptImage,
-        paymentDate: new Date(),
-        status: "Payment Sent",
-      },
-      { new: true }
-    ).lean();
-
+    const order = await Order.findOne({ id });
     if (!order) return clientError(res, "Order not found", 404);
+
+    if (order.status !== ORDER_STATUSES.AWAITING_PAYMENT) {
+      return clientError(res, "Order is not awaiting payment", 409);
+    }
+
+    if (order.paymentDueAt && order.paymentDueAt <= new Date()) {
+      order.status = ORDER_STATUSES.EXPIRED;
+      addStatusHistory(order, ORDER_STATUSES.EXPIRED, "Payment window expired.");
+      await order.save();
+      return clientError(res, "Order payment window has expired", 409);
+    }
+
+    order.paymentReference = paymentReference;
+    order.receiptImage = receiptImage;
+    order.paymentDate = new Date();
+    order.status = ORDER_STATUSES.PAYMENT_SUBMITTED;
+    order.paymentSubmittedAt = new Date();
+    order.paymentDueAt = undefined;
+    addStatusHistory(order, ORDER_STATUSES.PAYMENT_SUBMITTED, "Payment proof submitted.");
+    await order.save();
 
     const transaction = await Transaction.create({
       orderId: id,
@@ -683,7 +899,7 @@ app.patch("/api/orders/:id/payment", async (req, res) => {
       "payment"
     );
 
-    res.json({ ok: true, order, transaction });
+    res.json({ ok: true, order: order.toObject(), transaction });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -977,6 +1193,13 @@ async function start() {
     await mongoose.connect(MONGO_URI);
     await ensureCollections();
     await seedAdminIfMissing();
+    await migrateLegacyOrderStatuses();
+    await expireOverdueOrders();
+    setInterval(() => {
+      expireOverdueOrders().catch((err) => {
+        console.error("Expiry check failed:", err.message);
+      });
+    }, 5 * 60 * 1000);
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`MongoDB connected successfully! (URI hidden for security)`);

@@ -167,8 +167,9 @@
             const payload = await apiJson(`/api/orders?customerEmail=${encodeURIComponent(normalizedUserEmail)}`);
             const userOrders = payload.orders || [];
 
-            const activeOrders = userOrders.filter((o) => !['Completed', 'Cancelled', 'Declined', 'Disapproved'].includes(o.status));
-            const completedOrders = userOrders.filter((o) => o.status === 'Completed');
+            const terminalStates = ['completed', 'cancelled', 'declined_order', 'expired'];
+            const activeOrders = userOrders.filter((o) => !terminalStates.includes(String(o.status || '').trim().toLowerCase()));
+            const completedOrders = userOrders.filter((o) => String(o.status || '').trim().toLowerCase() === 'completed');
             document.getElementById('stat-active').innerText = activeOrders.length;
             document.getElementById('stat-completed').innerText = completedOrders.length;
 
@@ -182,9 +183,20 @@
 
             container.innerHTML = '';
             userOrders.slice().reverse().forEach((order) => {
+                const statusKey = String(order.status || '').trim().toLowerCase();
+                const statusLabelMap = {
+                    pending_approval: 'Pending Approval',
+                    awaiting_payment: 'Awaiting Payment',
+                    payment_submitted: 'Payment Submitted',
+                    in_progress: 'In Progress',
+                    completed: 'Completed',
+                    declined_order: 'Declined',
+                    cancelled: 'Cancelled',
+                    expired: 'Expired'
+                };
                 let statusColor = "text-yellow-400 border-yellow-400/30 bg-yellow-400/10";
-                if (order.status === "Gaming Started" || order.status === "In Progress") statusColor = "text-brand-pink border-brand-pink/30 bg-cyan-500/10";
-                if (order.status === "Completed") statusColor = "text-green-400 border-green-400/30 bg-green-400/10";
+                if (statusKey === "in_progress") statusColor = "text-brand-pink border-brand-pink/30 bg-cyan-500/10";
+                if (statusKey === "completed") statusColor = "text-green-400 border-green-400/30 bg-green-400/10";
 
                 const card = document.createElement('div');
                 card.className = "bg-[#150723]/50 backdrop-blur-md border border-white/5 hover:border-white/20 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all";
@@ -196,7 +208,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-[10px] font-mono text-gray-400 tracking-widest uppercase">MSR-${order.id || '-'}</span>
-                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest border ${statusColor}">${order.status || 'Pending'}</span>
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest border ${statusColor}">${statusLabelMap[statusKey] || order.status || 'Pending'}</span>
                             </div>
                             <div class="font-bold text-white">${order.game || 'Game Boost'}</div>
                             <div class="text-xs text-gray-400 mt-1">Target: <span class="text-gray-200">${order.targetRank || 'N/A'}</span></div>

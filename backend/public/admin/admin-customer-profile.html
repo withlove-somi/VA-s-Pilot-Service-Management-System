@@ -282,8 +282,10 @@
 
     function renderTransactions(orders) {
       const container = document.getElementById('transactions-container');
-      const terminalStates = ['Completed', 'Cancelled', 'Declined', 'Disapproved'];
-      const historyOrders = (orders || []).filter((order) => terminalStates.includes(order.status));
+      const terminalStates = ['completed', 'cancelled', 'declined_order', 'expired'];
+      const historyOrders = (orders || []).filter((order) =>
+        terminalStates.includes(String(order.status || '').trim().toLowerCase())
+      );
 
       if (!historyOrders.length) {
         container.innerHTML = `
@@ -295,7 +297,14 @@
 
       container.innerHTML = '';
       historyOrders.reverse().forEach((order) => {
-        const badgeStyle = order.status === 'Completed'
+        const statusKey = String(order.status || '').trim().toLowerCase();
+        const statusLabelMap = {
+          completed: 'Completed',
+          cancelled: 'Cancelled',
+          declined_order: 'Declined',
+          expired: 'Expired'
+        };
+        const badgeStyle = statusKey === 'completed'
           ? "bg-green-500/10 text-green-400 border-green-500/20"
           : "bg-red-500/10 text-red-400 border-red-500/20";
 
@@ -309,7 +318,7 @@
             <div>
               <div class="flex items-center gap-3">
                 <h4 class="font-bold text-white">${order.game || 'Boost Service'}</h4>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${badgeStyle}">${order.status}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${badgeStyle}">${statusLabelMap[statusKey] || order.status}</span>
               </div>
               <p class="text-xs text-gray-500 mt-1">Order ID: <span class="text-gray-400">${order.id}</span> • Date: ${order.date || '-'}</p>
             </div>

@@ -106,11 +106,14 @@
                 </div>
 
                 <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="handleProofDecision('Disapproved')" class="w-1/3 py-3 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-lg font-bold text-xs uppercase tracking-widest transition-all">
-                        Reject
+                    <button type="button" onclick="handleProofDecision('awaiting_payment')" class="w-1/3 py-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-white rounded-lg font-bold text-xs uppercase tracking-widest transition-all">
+                        Reject Receipt
                     </button>
-                    <button type="button" onclick="handleProofDecision('Payment Verified')" class="w-2/3 py-3 bg-green-500 hover:bg-green-400 text-white rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                        Verify Funds
+                    <button type="button" onclick="handleProofDecision('cancelled')" class="w-1/3 py-3 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-lg font-bold text-xs uppercase tracking-widest transition-all">
+                        Cancel Order
+                    </button>
+                    <button type="button" onclick="handleProofDecision('in_progress')" class="w-1/3 py-3 bg-green-500 hover:bg-green-400 text-white rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                        Accept Payment
                     </button>
                 </div>
             </div>
@@ -119,7 +122,7 @@
 
     <script>
         const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
-        const terminalStates = ['Completed', 'Cancelled', 'Declined', 'Disapproved'];
+        const terminalStates = ['completed', 'cancelled', 'declined_order', 'expired'];
         let currentReviewingOrderId = null;
         let ordersCache = [];
         let transactionsCache = [];
@@ -162,7 +165,10 @@
             }
             
             // FILTER: Show orders that are NOT requests and NOT terminal
-            const activeOrders = ordersCache.filter(order => order.status && order.status !== 'Order Request' && !terminalStates.includes(order.status));
+            const activeOrders = ordersCache.filter(order => {
+                const status = String(order.status || '').trim().toLowerCase();
+                return status && status !== 'pending_approval' && !terminalStates.includes(status);
+            });
 
             if (activeOrders.length === 0) {
                 container.innerHTML = `<div class="bg-black/40 border border-white/10 rounded-2xl p-12 text-center text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">No ongoing operations at this time.</div>`;
@@ -174,22 +180,32 @@
             activeOrders.forEach(order => {
                 let statusColor = "text-gray-400 border-white/10";
                 let adminActions = "";
-                const currentStatus = order.status;
+                const currentStatus = String(order.status || '').trim().toLowerCase();
+                const statusLabelMap = {
+                    pending_approval: 'Pending Approval',
+                    awaiting_payment: 'Awaiting Payment',
+                    payment_submitted: 'Payment Submitted',
+                    in_progress: 'In Progress',
+                    completed: 'Completed',
+                    declined_order: 'Declined',
+                    cancelled: 'Cancelled',
+                    expired: 'Expired'
+                };
+                const statusLabel = statusLabelMap[currentStatus] || (order.status || 'Unknown');
 
-                if (currentStatus === 'Order Accepted') {
+                if (currentStatus === 'awaiting_payment') {
                     statusColor = "text-yellow-400 border-yellow-400/20 bg-yellow-400/5";
                     adminActions = `<div class="w-full md:w-[200px] px-6 py-3 text-center text-yellow-400/60 rounded-lg font-bold text-[10px] uppercase tracking-widest border border-yellow-400/10 border-dashed">Awaiting Client Payment</div>`;
-                } else if (currentStatus === 'Payment Sent') {
+                } else if (currentStatus === 'payment_submitted') {
                     statusColor = "text-blue-400 border-blue-400/20 bg-blue-400/5";
                     adminActions = `
                         <button onclick="openProofModal('${order.id}')" class="w-full md:w-[200px] px-6 py-3 bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500 text-blue-300 hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]">View Payment Proof</button>
                     `;
-                } else if (currentStatus === 'Payment Verified') {
+                } else if (currentStatus === 'in_progress') {
                     statusColor = "text-green-400 border-green-400/20 bg-green-400/5";
-                    adminActions = `<button onclick="updateStatus('${order.id}', 'Gaming Started')" class="w-full md:w-[200px] px-6 py-3 bg-gradient-to-r from-brand-pink to-brand-purple text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(224,0,255,0.3)]">Deploy Pilot</button>`;
-                } else if (currentStatus === 'Gaming Started') {
-                    statusColor = "text-brand-pink border-brand-pink/20 bg-brand-pink/5 animate-pulse";
-                    adminActions = `<button onclick="updateStatus('${order.id}', 'Completed')" class="w-full md:w-[200px] px-6 py-3 bg-white text-black rounded-lg font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all">Finalize Mission</button>`;
+                    adminActions = `<button onclick="updateStatus('${order.id}', 'completed')" class="w-full md:w-[200px] px-6 py-3 bg-white text-black rounded-lg font-bold text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all">Finalize Mission</button>`;
+                } else {
+                    statusColor = "text-gray-400 border-white/10";
                 }
 
                 const card = document.createElement('div');
@@ -199,7 +215,7 @@
                         <div class="flex-1 w-full">
                             <div class="flex items-center justify-between mb-4">
                                 <span class="text-[11px] font-bold text-gray-500 tracking-[0.2em] uppercase">Order ID: ${order.id}</span>
-                                <span class="text-[11px] font-bold uppercase tracking-widest ${statusColor} px-3 py-1.5 rounded border">${currentStatus}</span>
+                                <span class="text-[11px] font-bold uppercase tracking-widest ${statusColor} px-3 py-1.5 rounded border">${statusLabel}</span>
                             </div>
                             
                             <div class="flex items-center gap-5 mb-6">

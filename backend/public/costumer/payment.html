@@ -293,7 +293,7 @@
                 document.getElementById('order-total-amount').innerText = `₱${currentOrder.totalPrice || "0.00"}`;
                 document.getElementById('order-status-badge').innerText = (currentOrder.status || "UNKNOWN").toUpperCase();
 
-                if(currentOrder.status && currentOrder.status !== 'Order Accepted') {
+                if (currentOrder.status && String(currentOrder.status).trim().toLowerCase() !== 'awaiting_payment') {
                     submitBtn.disabled = true;
                     submitBtnText.innerText = "PAYMENT ALREADY SUBMITTED";
                     submitBtn.classList.add('opacity-50', 'cursor-not-allowed');

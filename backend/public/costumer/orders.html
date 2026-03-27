@@ -162,7 +162,7 @@
             return data;
         }
 
-        const terminalStates = ['Completed', 'Cancelled', 'Declined', 'Disapproved'];
+        const terminalStates = ['completed', 'cancelled', 'declined_order', 'expired'];
         let currentPayingOrderId = null; 
 
         const currentUser = JSON.parse(localStorage.getItem('va_pilot_current_user'));
@@ -177,7 +177,7 @@
             try {
                 const payload = await apiJson(`/api/orders?customerEmail=${encodeURIComponent(userEmail)}`);
                 const allOrders = payload.orders || [];
-                activeOrders = allOrders.filter((order) => !terminalStates.includes(order.status));
+                activeOrders = allOrders.filter((order) => !terminalStates.includes(String(order.status || '').trim().toLowerCase()));
             } catch (err) {
                 container.innerHTML = `<div class="bg-black/40 border border-red-500/20 rounded-xl p-10 text-center text-red-300 text-xs">${err.message || 'Unable to load orders.'}</div>`;
                 return;
@@ -195,27 +195,33 @@
                 let mainActionHtml = "";
                 let showCancel = false;
                 
-                const currentStatus = order.status || "Order Request"; 
+                const currentStatus = String(order.status || "pending_approval").trim().toLowerCase();
+                const statusLabelMap = {
+                    pending_approval: 'Pending Approval',
+                    awaiting_payment: 'Awaiting Payment',
+                    payment_submitted: 'Payment Submitted',
+                    in_progress: 'In Progress',
+                    completed: 'Completed',
+                    declined_order: 'Declined',
+                    cancelled: 'Cancelled',
+                    expired: 'Expired'
+                };
 
-                if (currentStatus === 'Order Request') {
+                if (currentStatus === 'pending_approval') {
                     statusBadgeColor = "text-yellow-400 border-yellow-400/20 bg-yellow-400/5";
                     mainActionHtml = `<div class="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-gray-400 text-xs font-bold uppercase tracking-widest cursor-not-allowed text-center">Waiting for Acceptance</div>`;
                     showCancel = true;
                 } 
-                else if (currentStatus === 'Order Accepted') {
+                else if (currentStatus === 'awaiting_payment') {
                     statusBadgeColor = "text-green-400 border-green-400/20 bg-green-400/5";
                     mainActionHtml = `<button onclick="openPaymentModal('${order.id}')" class="w-full md:w-auto px-10 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-[0_0_20px_rgba(224,0,255,0.3)] hover:scale-105 transition-all text-sm font-bold uppercase tracking-wider">Pay Now</button>`;
                     showCancel = true;
                 }
-                else if (currentStatus === 'Payment Sent') {
+                else if (currentStatus === 'payment_submitted') {
                     statusBadgeColor = "text-blue-400 border-blue-400/20 bg-blue-400/5";
                     mainActionHtml = `<div class="px-6 py-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-widest cursor-not-allowed text-center">Waiting for Verification</div>`;
                 }
-                else if (currentStatus === 'Payment Verified') {
-                    statusBadgeColor = "text-indigo-400 border-indigo-400/20 bg-indigo-400/5";
-                    mainActionHtml = `<div class="px-6 py-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-widest cursor-not-allowed text-center">Ready to Start</div>`;
-                }
-                else if (currentStatus === 'Gaming Started') {
+                else if (currentStatus === 'in_progress') {
                     statusBadgeColor = "text-brand-pink border-brand-pink/20 bg-brand-pink/5 animate-pulse";
                     mainActionHtml = `<div class="px-6 py-3 rounded-lg bg-cyan-500/10 border border-brand-pink/20 text-brand-pink text-xs font-bold uppercase tracking-widest text-center flex items-center justify-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-brand-pink animate-ping"></span> Gaming Ongoing
@@ -229,7 +235,7 @@
                         <div class="flex-1 w-full">
                             <div class="flex items-center justify-between mb-4">
                                 <span class="text-[11px] font-bold text-gray-500 tracking-[0.2em] uppercase">Order ID: ${order.id}</span>
-                                <span class="text-[11px] font-bold uppercase tracking-widest ${statusBadgeColor} px-3 py-1.5 rounded border">${currentStatus}</span>
+                                <span class="text-[11px] font-bold uppercase tracking-widest ${statusBadgeColor} px-3 py-1.5 rounded border">${statusLabelMap[currentStatus] || currentStatus}</span>
                             </div>
                             
                             <div class="flex items-center gap-5 mb-6">
@@ -310,7 +316,7 @@
                     </div>
                     ${showCancel ? `
                         <div class="flex justify-start px-2">
-                            <button onclick="updateOrderStatus('${order.id}', 'Cancelled')" class="text-xs font-bold uppercase tracking-widest text-red-500/70 hover:text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-md transition-all flex items-center gap-2 group">
+                            <button onclick="updateOrderStatus('${order.id}', 'cancelled')" class="text-xs font-bold uppercase tracking-widest text-red-500/70 hover:text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-md transition-all flex items-center gap-2 group">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                                 Cancel this request
                             </button>
