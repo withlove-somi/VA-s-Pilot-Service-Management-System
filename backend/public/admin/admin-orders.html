@@ -188,7 +188,10 @@
             activeOrders.forEach(order => {
                 const customerEmail = String(order.customerEmail || order.customer_email || '').trim().toLowerCase();
                 const customer = usersByEmail.get(customerEmail);
-                const displayName = customer?.fullname || customer?.name || order.customerName || order.clientName || 'Standard Pilot';
+                const displayName = (() => {
+                    const full = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ').trim();
+                    return full || customer?.fullname || customer?.name || order.customerEmail || order.customer_email || 'Standard Pilot';
+                })();
                 const avatarHtml = customer?.profileImage
                     ? `<img src="${customer.profileImage}" alt="${displayName}" class="w-14 h-14 rounded-xl object-cover border border-white/10">`
                     : `<div class="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-pink shrink-0">

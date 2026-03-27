@@ -232,7 +232,7 @@
         return;
       }
 
-      const displayName = user.fullname || user.name || 'Customer';
+      const displayName = ([user.firstName, user.lastName].filter(Boolean).join(' ').trim()) || user.fullname || user.name || 'Customer';
       nameEl.textContent = displayName;
       emailEl.textContent = user.email || 'N/A';
       initialsEl.textContent = displayName
@@ -315,7 +315,7 @@
           ? "bg-green-500/10 text-green-400 border-green-500/20"
           : "bg-red-500/10 text-red-400 border-red-500/20";
 
-        const customerName = displayName || order.customerName || order.clientName || order.customerEmail || order.customer_email || 'Customer';
+        const customerName = displayName || order.customerEmail || order.customer_email || 'Customer';
         const reason =
           String(order.rejectionReason || order.lastActionReason || order.declineReason || "").trim();
         const prettyDate = order.updatedAt || order.createdAt

@@ -86,6 +86,7 @@
     <script>
         const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
         let ordersCache = [];
+        let usersByEmail = new Map();
 
         async function apiJson(path, options = {}) {
             const response = await fetch(`${API_BASE}${path}`, {
@@ -107,8 +108,15 @@
         async function loadAdminOrders() {
             const container = document.getElementById('admin-orders-list');
             try {
-                const payload = await apiJson('/api/orders');
-                ordersCache = payload.orders || [];
+                const [ordersPayload, usersPayload] = await Promise.all([
+                    apiJson('/api/orders'),
+                    apiJson('/api/users')
+                ]);
+                ordersCache = ordersPayload.orders || [];
+                const users = usersPayload.users || [];
+                usersByEmail = new Map(
+                    users.map((user) => [String(user.email || '').toLowerCase(), user])
+                );
             } catch (err) {
                 container.innerHTML = `<div class="bg-black/40 border border-red-500/30 rounded-2xl p-8 text-center text-red-300 text-sm">Unable to load orders: ${err.message || 'Request failed'}</div>`;
                 return;
@@ -127,6 +135,13 @@
             activeOrders.forEach(order => {
                 const statusColor = "text-yellow-400 border-yellow-400/20 bg-yellow-400/5";
                 const currentStatus = order.status || "pending_approval";
+                const emailKey = String(order.customerEmail || order.customer_email || '').toLowerCase();
+                const customer = usersByEmail.get(emailKey);
+                const displayName = (() => {
+                    if (!customer) return order.customerEmail || 'Standard Pilot';
+                    const full = [customer.firstName, customer.lastName].filter(Boolean).join(' ').trim();
+                    return full || customer.fullname || customer.name || customer.email || 'Standard Pilot';
+                })();
                 const adminActions = `
                     <button onclick="updateStatus('${order.id}', 'awaiting_payment')" class="w-full px-8 py-3 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(122,0,255,0.2)]">Accept Mission</button>
                     <button onclick="declineOrder('${order.id}')" class="w-full px-8 py-3 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">Decline</button>
@@ -148,7 +163,7 @@
                                 </div>
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <h3 class="text-2xl font-bold text-white tracking-tight">${order.customerName || order.clientName || 'Standard Pilot'}</h3>
+                                        <h3 class="text-2xl font-bold text-white tracking-tight">${displayName}</h3>
                                         <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${order.customerVerified ? 'text-green-300 border-green-400/30 bg-green-400/10' : 'text-yellow-300 border-yellow-400/30 bg-yellow-400/10'}">
                                             ${order.customerVerified ? 'Verified' : 'Unverified'}
                                         </span>

@@ -575,7 +575,6 @@
             const newOrder = {
                 id: 'ORD-' + Math.floor(100000 + Math.random() * 900000), 
                 date: new Date().toLocaleDateString(),
-                customerName: document.getElementById('full-name').value,
                 customerEmail: normalizedEmail,
                 customerVerified: Boolean(currentUser?.verified),
                 ign: document.getElementById('ign').value,
