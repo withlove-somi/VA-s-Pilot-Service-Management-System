@@ -194,7 +194,7 @@
       const avatarFallback = document.getElementById('chat-avatar-fallback');
       const profileLink = document.getElementById('profile-link');
       const deleteBtn = document.getElementById('delete-chat-btn');
-      const users = getUsers();
+      const users = allUsers;
       const user = users.find((u) => String(u.email || '').trim().toLowerCase() === selectedEmail);
       const displayName = user ? (user.fullname || user.name || 'Customer') : 'No customer selected';
       nameEl.textContent = displayName;

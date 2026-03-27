@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 flex flex-col scroll-smooth"></div>
 
                 <form id="chat-form" class="p-4 border-t border-white/10 bg-black/20 rounded-b-2xl flex gap-3">
-                    <input type="text" id="chat-input" placeholder="Type message..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
+                    <input maxlength="1000" type="text" id="chat-input" placeholder="Type message..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
                     <button type="submit" id="send-btn" class="w-12 h-12 rounded-xl bg-cyan-500 text-white flex items-center justify-center hover:bg-cyan-400 transition-colors shadow-[0_0_10px_rgba(34,211,238,0.35)]">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 ml-1"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
                     </button>

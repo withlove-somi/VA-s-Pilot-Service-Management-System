@@ -98,7 +98,7 @@
                 <div>
                     <label class="block text-[11px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Full Name</label>
                     <div class="relative">
-                        <input type="text" id="fullname" required placeholder="Caroline Channing" class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
+                        <input maxlength="200" type="text" id="fullname" required placeholder="Caroline Channing" class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -110,7 +110,7 @@
                 <div>
                     <label class="block text-[11px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Email</label>
                     <div class="relative">
-                        <input type="email" id="email" required placeholder="commander@domain.com" class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
+                        <input maxlength="250" type="email" id="email" required placeholder="commander@domain.com" class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">✉</span>
                     </div>
                 </div>
@@ -118,7 +118,7 @@
                 <div>
                     <label class="block text-[11px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Password</label>
                     <div class="relative">
-                        <input type="password" id="passcode" required placeholder="••••••••••••" class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
+                        <input maxlength="16" type="password" id="passcode" required placeholder="••••••••••••" class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
                         <button type="button" id="toggle-password" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors focus:outline-none">
                             <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
@@ -131,7 +131,7 @@
                 <div>
                     <label class="block text-[11px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Confirm Password</label>
                     <div class="relative">
-                        <input type="password" id="confirm-passcode" required placeholder="••••••••••••" class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
+                        <input maxlength="16" type="password" id="confirm-passcode" required placeholder="••••••••••••" class="w-full bg-black/40 border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-all">
                         <button type="button" id="toggle-confirm" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors focus:outline-none">
                             <svg id="eye-icon-confirm" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
