@@ -87,15 +87,15 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 <div class="bg-[#150723]/50 backdrop-blur-md border border-white/10 rounded-2xl p-6 relative overflow-hidden">
-                    <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">My Active Orders</div>
-                    <div class="text-4xl font-black text-white" id="stat-active">0</div>
+                    <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">My Successful Orders</div>
+                    <div class="text-4xl font-black text-white" id="stat-my-completed">0</div>
                     <div class="absolute -right-4 -bottom-4 opacity-10">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-24 h-24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
                     </div>
                 </div>
                 <div class="bg-[#150723]/50 backdrop-blur-md border border-white/10 rounded-2xl p-6 relative overflow-hidden">
                     <div class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Admin Successful Orders</div>
-                    <div class="text-4xl font-black text-white" id="stat-completed">0</div>
+                    <div class="text-4xl font-black text-white" id="stat-admin-completed">0</div>
                     <div class="absolute -right-4 -bottom-4 opacity-10">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-24 h-24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
@@ -156,6 +156,7 @@
                 document.getElementById('user-status-display').innerText = currentUser.verified ? 'Verified' : 'Unverified';
 
                 await loadUserOrders(currentUser.email);
+                await loadAdminCompletedOrders();
             } catch (err) {
                 alert(err.message || 'Unable to load dashboard data.');
             }
@@ -167,11 +168,9 @@
             const payload = await apiJson(`/api/orders?customerEmail=${encodeURIComponent(normalizedUserEmail)}`);
             const userOrders = payload.orders || [];
 
-            const terminalStates = ['completed', 'cancelled', 'declined_order', 'expired'];
-            const activeOrders = userOrders.filter((o) => !terminalStates.includes(String(o.status || '').trim().toLowerCase()));
             const completedOrders = userOrders.filter((o) => String(o.status || '').trim().toLowerCase() === 'completed');
-            document.getElementById('stat-active').innerText = activeOrders.length;
-            document.getElementById('stat-completed').innerText = completedOrders.length;
+            const myCompletedEl = document.getElementById('stat-my-completed');
+            if (myCompletedEl) myCompletedEl.innerText = completedOrders.length;
 
             if (userOrders.length === 0) {
                 container.innerHTML = `
@@ -227,6 +226,22 @@
                 `;
                 container.appendChild(card);
             });
+        }
+
+        async function loadAdminCompletedOrders() {
+            const adminCompletedEl = document.getElementById('stat-admin-completed');
+            if (!adminCompletedEl) return;
+            try {
+                const payload = await apiJson('/api/orders');
+                const orders = payload.orders || [];
+                const completedOrders = orders.filter(
+                    (o) => String(o.status || '').trim().toLowerCase() === 'completed'
+                );
+                adminCompletedEl.innerText = completedOrders.length;
+            } catch (err) {
+                console.error('Failed to load admin successful orders.', err);
+                adminCompletedEl.innerText = '0';
+            }
         }
     </script>
     <script src="chat-widget.js"></script>
