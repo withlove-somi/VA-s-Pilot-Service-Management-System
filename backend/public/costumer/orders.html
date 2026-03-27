@@ -191,10 +191,6 @@
             container.innerHTML = ''; 
 
             activeOrders.forEach(order => {
-                const displayName = (() => {
-                    const full = [currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(' ').trim();
-                    return full || currentUser?.fullname || currentUser?.name || 'Commander';
-                })();
                 let statusBadgeColor = "";
                 let mainActionHtml = "";
                 let showCancel = false;
@@ -255,7 +251,7 @@
                                 </div>
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <h3 class="text-2xl font-bold text-white tracking-tight">${displayName}</h3>
+                                        <h3 class="text-2xl font-bold text-white tracking-tight">${order.customerName || 'Commander'}</h3>
                                         <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${order.customerVerified ? 'text-green-300 border-green-400/30 bg-green-400/10' : 'text-yellow-300 border-yellow-400/30 bg-yellow-400/10'}">
                                             ${order.customerVerified ? 'Verified' : 'Unverified'}
                                         </span>

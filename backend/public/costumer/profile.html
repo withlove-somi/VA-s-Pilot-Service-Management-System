@@ -488,8 +488,9 @@
                     : "bg-red-500/10 text-red-400 border-red-500/20";
 
                 const customerName =
-                    ([currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(' ').trim()) ||
                     (currentUser && (currentUser.fullname || currentUser.name)) ||
+                    order.customerName ||
+                    order.clientName ||
                     order.customerEmail ||
                     order.customer_email ||
                     'Customer';

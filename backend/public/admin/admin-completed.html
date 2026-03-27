@@ -85,7 +85,6 @@
 
     <script>
         const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
-        let usersByEmail = new Map();
 
         async function apiJson(path, options = {}) {
             const response = await fetch(`${API_BASE}${path}`, {
@@ -108,15 +107,8 @@
             const container = document.getElementById('completed-orders-list');
             let allOrders = [];
             try {
-                const [ordersPayload, usersPayload] = await Promise.all([
-                    apiJson('/api/orders'),
-                    apiJson('/api/users')
-                ]);
-                allOrders = ordersPayload.orders || [];
-                const users = usersPayload.users || [];
-                usersByEmail = new Map(
-                    users.map((user) => [String(user.email || '').toLowerCase(), user])
-                );
+                const payload = await apiJson('/api/orders');
+                allOrders = payload.orders || [];
             } catch (err) {
                 container.innerHTML = `<div class="bg-black/40 border border-red-500/30 rounded-2xl p-8 text-center text-red-300 text-sm">Unable to load orders: ${err.message || 'Request failed'}</div>`;
                 return;
@@ -154,12 +146,8 @@
                     ? "bg-green-500/10 text-green-400 border-green-500/20"
                     : "bg-red-500/10 text-red-400 border-red-500/20";
 
+                const customerName = order.customerName || order.clientName || order.customerEmail || order.customer_email || 'Customer';
                 const customerEmail = order.customerEmail || order.customer_email || '';
-                const customer = usersByEmail.get(String(customerEmail || '').toLowerCase());
-                const customerName = (() => {
-                    const full = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ').trim();
-                    return full || customer?.fullname || customer?.name || customerEmail || 'Customer';
-                })();
                 const reason =
                     String(order.rejectionReason || order.lastActionReason || order.declineReason || "").trim();
                 const prettyDate = order.updatedAt || order.createdAt

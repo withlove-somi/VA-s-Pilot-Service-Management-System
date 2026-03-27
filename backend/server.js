@@ -23,37 +23,6 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
-function splitName(fullname) {
-  const raw = String(fullname || "").trim();
-  if (!raw) return { firstName: "", lastName: "" };
-  const parts = raw.split(/\s+/);
-  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
-  return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
-}
-
-function buildFullName(firstName, lastName) {
-  return [firstName, lastName].filter(Boolean).join(" ").trim();
-}
-
-function toPublicUser(user) {
-  if (!user) return user;
-  const obj = user.toObject ? user.toObject() : { ...user };
-  delete obj.password;
-  const firstName = String(obj.firstName || "").trim();
-  const lastName = String(obj.lastName || "").trim();
-  const fullName =
-    buildFullName(firstName, lastName) ||
-    String(obj.fullname || obj.name || "").trim();
-  return {
-    ...obj,
-    firstName,
-    lastName,
-    fullName,
-    fullname: fullName,
-    name: fullName,
-  };
-}
-
 function clientError(res, message, status = 400) {
   return res.status(status).json({ ok: false, error: message });
 }
@@ -171,67 +140,10 @@ async function migrateLegacyOrderStatuses() {
   );
 }
 
-async function migrateUserNames() {
-  const candidates = await User.find({
-    $or: [
-      { firstName: { $exists: false } },
-      { lastName: { $exists: false } },
-      { firstName: "" },
-      { lastName: "" },
-      { fullname: { $exists: true } },
-      { name: { $exists: true } },
-    ],
-  });
-
-  for (const user of candidates) {
-    const rawFull = String(user.fullname || user.name || "").trim();
-    const derived = rawFull ? splitName(rawFull) : { firstName: "", lastName: "" };
-    const nextFirst = String(user.firstName || "").trim() || derived.firstName;
-    const nextLast = String(user.lastName || "").trim() || derived.lastName;
-
-    await User.updateOne(
-      { _id: user._id },
-      {
-        $set: {
-          firstName: nextFirst || undefined,
-          lastName: nextLast || undefined,
-        },
-      }
-    );
-  }
-
-  await User.updateMany(
-    { $or: [{ fullname: { $exists: true } }, { name: { $exists: true } }] },
-    { $unset: { fullname: "", name: "" } }
-  );
-}
-
-async function migrateOrderCustomerRefs() {
-  const orders = await Order.find({
-    $or: [{ customerId: { $exists: false } }, { customerId: null }],
-  }).lean();
-
-  for (const order of orders) {
-    const email = normalizeEmail(order.customerEmail);
-    if (!email) continue;
-    const user = await User.findOne({ email }).lean();
-    if (!user) continue;
-    await Order.updateOne(
-      { _id: order._id },
-      { $set: { customerId: user._id } }
-    );
-  }
-
-  await Order.updateMany(
-    { customerName: { $exists: true } },
-    { $unset: { customerName: "" } }
-  );
-}
-
 const userSchema = new mongoose.Schema(
   {
-    firstName: { type: String, trim: true },
-    lastName: { type: String, trim: true },
+    fullname: { type: String, trim: true },
+    name: { type: String, trim: true },
     email: {
       type: String,
       required: true,
@@ -262,7 +174,7 @@ const userSchema = new mongoose.Schema(
 const orderSchema = new mongoose.Schema(
   {
     id: { type: String, required: true, unique: true, trim: true },
-    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    customerName: { type: String, trim: true },
     customerEmail: { type: String, required: true, lowercase: true, trim: true },
     customerVerified: { type: Boolean, default: false },
     pilotLoginMethod: { type: String, trim: true },
@@ -362,6 +274,18 @@ const chatMessageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const feedbackSchema = new mongoose.Schema(
+  {
+    userId: { type: String, trim: true },
+    userEmail: { type: String, lowercase: true, trim: true },
+    name: { type: String, trim: true },
+    email: { type: String, lowercase: true, trim: true },
+    rating: { type: Number, min: 1, max: 5 },
+    message: { type: String, required: true, trim: true },
+  },
+  { timestamps: true }
+);
+
 const transactionSchema = new mongoose.Schema(
   {
     orderId: { type: String, required: true, trim: true },
@@ -398,6 +322,7 @@ const VerificationRequest = mongoose.model(
   verificationRequestSchema
 );
 const ChatMessage = mongoose.model("ChatMessage", chatMessageSchema);
+const Feedback = mongoose.model("Feedback", feedbackSchema);
 const Transaction = mongoose.model("Transaction", transactionSchema);
 const PaymentSettings = mongoose.model("PaymentSettings", paymentSettingsSchema);
 
@@ -419,25 +344,19 @@ app.get("/api/health", async (req, res) => {
 async function handleRegister(req, res) {
   try {
     const fullname = String(req.body.fullname || req.body.name || "").trim();
-    const reqFirstName = String(req.body.firstName || "").trim();
-    const reqLastName = String(req.body.lastName || "").trim();
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "").trim();
 
-    if (!fullname && !reqFirstName) return clientError(res, "fullname or firstName is required");
+    if (!fullname) return clientError(res, "fullname is required");
     if (!email) return clientError(res, "email is required");
     if (!password) return clientError(res, "password is required");
 
     const exists = await User.findOne({ email }).lean();
     if (exists) return clientError(res, "Email already registered", 409);
 
-    const nameParts = reqFirstName
-      ? { firstName: reqFirstName, lastName: reqLastName }
-      : splitName(fullname);
-
     const user = await User.create({
-      firstName: nameParts.firstName,
-      lastName: nameParts.lastName,
+      fullname,
+      name: fullname,
       email,
       password,
       role: "customer",
@@ -446,7 +365,14 @@ async function handleRegister(req, res) {
 
     res.status(201).json({
       ok: true,
-      user: toPublicUser(user),
+      user: {
+        id: user._id,
+        fullname: user.fullname,
+        name: user.name,
+        email: user.email,
+        verified: user.verified,
+        role: user.role,
+      },
     });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -471,7 +397,14 @@ app.post("/api/auth/login", async (req, res) => {
 
     res.json({
       ok: true,
-      user: toPublicUser(user),
+      user: {
+        id: user._id,
+        fullname: user.fullname,
+        name: user.name,
+        email: user.email,
+        verified: Boolean(user.verified),
+        role: user.role,
+      },
     });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -494,7 +427,17 @@ app.patch("/api/auth/password", async (req, res) => {
 
     if (!user) return clientError(res, "User not found", 404);
 
-    res.json({ ok: true, user: toPublicUser(user) });
+    res.json({
+      ok: true,
+      user: {
+        id: user._id,
+        fullname: user.fullname,
+        name: user.name,
+        email: user.email,
+        verified: Boolean(user.verified),
+        role: user.role,
+      },
+    });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -513,7 +456,12 @@ app.post("/api/admin/login", async (req, res) => {
 
     res.json({
       ok: true,
-      admin: toPublicUser(user),
+      admin: {
+        id: user._id,
+        fullname: user.fullname,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -523,7 +471,7 @@ app.post("/api/admin/login", async (req, res) => {
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find({}, "-password").sort({ createdAt: -1 }).lean();
-    res.json({ ok: true, users: users.map(toPublicUser) });
+    res.json({ ok: true, users });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -534,7 +482,7 @@ app.get("/api/users/:email", async (req, res) => {
     const email = normalizeEmail(req.params.email);
     const user = await User.findOne({ email }, "-password").lean();
     if (!user) return clientError(res, "User not found", 404);
-    res.json({ ok: true, user: toPublicUser(user) });
+    res.json({ ok: true, user });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -554,7 +502,7 @@ app.patch("/api/users/:email/profile-image", async (req, res) => {
 
     if (!user) return clientError(res, "User not found", 404);
 
-    res.json({ ok: true, user: toPublicUser(user) });
+    res.json({ ok: true, user });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -574,7 +522,7 @@ app.patch("/api/users/:email/verification", async (req, res) => {
     if (!user) return clientError(res, "User not found", 404);
 
     await Order.updateMany({ customerEmail: email }, { customerVerified: verified });
-    res.json({ ok: true, user: toPublicUser(user) });
+    res.json({ ok: true, user });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -623,7 +571,9 @@ app.patch("/api/users/:email/admin-action", async (req, res) => {
     }
 
     await user.save();
-    res.json({ ok: true, user: toPublicUser(user) });
+    const payload = user.toObject();
+    delete payload.password;
+    res.json({ ok: true, user: payload });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -649,15 +599,14 @@ app.post("/api/orders", async (req, res) => {
   try {
     const email = normalizeEmail(req.body.customerEmail || req.body.customer_email);
     if (!email) return clientError(res, "customerEmail is required");
-    const customer = await User.findOne({ email }).lean();
 
     const orderId = String(req.body.id || `ORD-${Date.now()}`).trim();
     const payload = {
       ...req.body,
       id: orderId,
       customerEmail: email,
-      customerId: customer ? customer._id : undefined,
-      customerVerified: customer ? Boolean(customer.verified) : Boolean(req.body.customerVerified),
+      customerName: String(req.body.customerName || req.body.clientName || "").trim(),
+      customerVerified: Boolean(req.body.customerVerified),
       starsNeeded: parseNumberLike(req.body.starsNeeded, 0),
       totalPrice: parseNumberLike(req.body.totalPrice, 0),
       status: ORDER_STATUSES.PENDING_APPROVAL,
@@ -1206,6 +1155,26 @@ app.delete("/api/messages", async (req, res) => {
   }
 });
 
+app.post("/api/feedback", async (req, res) => {
+  try {
+    const message = String(req.body.message || "").trim();
+    if (!message) return clientError(res, "message is required");
+
+    const feedback = await Feedback.create({
+      userId: String(req.body.userId || "").trim() || undefined,
+      userEmail: normalizeEmail(req.body.userEmail || req.body.email || ""),
+      name: String(req.body.name || "").trim() || undefined,
+      email: normalizeEmail(req.body.email || ""),
+      rating: parseNumberLike(req.body.rating, undefined),
+      message,
+    });
+
+    res.status(201).json({ ok: true, feedback });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -1217,6 +1186,7 @@ async function ensureCollections() {
     Notification.createCollection(),
     VerificationRequest.createCollection(),
     ChatMessage.createCollection(),
+    Feedback.createCollection(),
     Transaction.createCollection(),
     PaymentSettings.createCollection(),
   ]);
@@ -1227,10 +1197,9 @@ async function seedAdminIfMissing() {
   const adminPassword = String(process.env.ADMIN_PASSWORD || "admin123");
   const exists = await User.findOne({ email: adminEmail, role: "admin" }).lean();
   if (!exists) {
-    const nameParts = splitName(process.env.ADMIN_NAME || "System Admin");
     await User.create({
-      firstName: nameParts.firstName,
-      lastName: nameParts.lastName,
+      fullname: "System Admin",
+      name: "System Admin",
       email: adminEmail,
       password: adminPassword,
       role: "admin",
@@ -1245,8 +1214,6 @@ async function start() {
     await mongoose.connect(MONGO_URI);
     await ensureCollections();
     await seedAdminIfMissing();
-    await migrateUserNames();
-    await migrateOrderCustomerRefs();
     await migrateLegacyOrderStatuses();
     await expireOverdueOrders();
     setInterval(() => {
