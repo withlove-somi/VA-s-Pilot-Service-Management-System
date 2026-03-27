@@ -206,6 +206,10 @@
                     cancelled: 'Cancelled',
                     expired: 'Expired'
                 };
+                const dueAt = order.paymentDueAt ? new Date(order.paymentDueAt).toISOString() : "";
+                const timeLeftHtml = currentStatus === 'awaiting_payment' && dueAt
+                    ? `<div class="text-[10px] text-yellow-300 mt-1">Time left: <span class="time-left" data-due-at="${dueAt}">--</span></div>`
+                    : '';
 
                 if (currentStatus === 'pending_approval') {
                     statusBadgeColor = "text-yellow-400 border-yellow-400/20 bg-yellow-400/5";
@@ -235,7 +239,10 @@
                         <div class="flex-1 w-full">
                             <div class="flex items-center justify-between mb-4">
                                 <span class="text-[11px] font-bold text-gray-500 tracking-[0.2em] uppercase">Order ID: ${order.id}</span>
-                                <span class="text-[11px] font-bold uppercase tracking-widest ${statusBadgeColor} px-3 py-1.5 rounded border">${statusLabelMap[currentStatus] || currentStatus}</span>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-[11px] font-bold uppercase tracking-widest ${statusBadgeColor} px-3 py-1.5 rounded border">${statusLabelMap[currentStatus] || currentStatus}</span>
+                                    ${timeLeftHtml}
+                                </div>
                             </div>
                             
                             <div class="flex items-center gap-5 mb-6">
@@ -249,7 +256,7 @@
                                             ${order.customerVerified ? 'Verified' : 'Unverified'}
                                         </span>
                                     </div>
-                                    <p class="text-sm text-gray-500 font-medium">Requested: ${order.date || 'Today'}</p>
+                                    
                                 </div>
                             </div>
 
@@ -316,7 +323,7 @@
                     </div>
                     ${showCancel ? `
                         <div class="flex justify-start px-2">
-                            <button onclick="updateOrderStatus('${order.id}', 'cancelled')" class="text-xs font-bold uppercase tracking-widest text-red-500/70 hover:text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-md transition-all flex items-center gap-2 group">
+                            <button onclick="updateOrderStatus('${order.id}', 'cancelled', 'Cancelled by customer')" class="text-xs font-bold uppercase tracking-widest text-red-500/70 hover:text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-md transition-all flex items-center gap-2 group">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                                 Cancel this request
                             </button>
@@ -325,13 +332,39 @@
                 `;
                 container.appendChild(card);
             });
+            startCountdowns();
         }
 
-        async function updateOrderStatus(orderId, newStatus) {
+        let countdownTimer = null;
+        function formatRemaining(ms) {
+            if (ms <= 0) return 'Expired';
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        function startCountdowns() {
+            if (countdownTimer) clearInterval(countdownTimer);
+            const nodes = document.querySelectorAll('.time-left[data-due-at]');
+            const tick = () => {
+                nodes.forEach((node) => {
+                    const dueAt = node.dataset.dueAt;
+                    if (!dueAt) return;
+                    const ms = new Date(dueAt).getTime() - Date.now();
+                    node.textContent = formatRemaining(ms);
+                });
+            };
+            tick();
+            countdownTimer = setInterval(tick, 1000);
+        }
+
+        async function updateOrderStatus(orderId, newStatus, reason = "") {
             try {
                 await apiJson(`/api/orders/${encodeURIComponent(orderId)}/status`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({ status: newStatus, reason })
                 });
                 loadOrders();
             } catch (err) {

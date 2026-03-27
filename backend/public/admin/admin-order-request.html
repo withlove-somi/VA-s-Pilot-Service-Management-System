@@ -241,14 +241,23 @@
             }
         }
 
+        function requireReason(actionLabel) {
+            const reason = prompt(`Please enter a reason for "${actionLabel}":`);
+            if (!reason || !reason.trim()) {
+                alert('Reason is required.');
+                return null;
+            }
+            return reason.trim();
+        }
+
         async function declineOrder(orderId) {
-            const reason = prompt("Reason for declining this order?");
-            if (!reason || !reason.trim()) return;
+            const reason = requireReason("Decline Order");
+            if (!reason) return;
 
             try {
                 await apiJson(`/api/orders/${encodeURIComponent(orderId)}/status`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ status: 'declined_order', declineReason: reason.trim() })
+                    body: JSON.stringify({ status: 'declined_order', reason })
                 });
                 await loadAdminOrders();
             } catch (err) {

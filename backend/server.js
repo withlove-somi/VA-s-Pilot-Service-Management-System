@@ -212,6 +212,8 @@ const orderSchema = new mongoose.Schema(
     paymentDate: { type: Date },
     latestTransactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
     declineReason: { type: String, trim: true },
+    rejectionReason: { type: String, trim: true },
+    lastActionReason: { type: String, trim: true },
     statusHistory: [
       {
         status: { type: String, trim: true },
@@ -229,6 +231,11 @@ const notificationSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     message: { type: String, required: true, trim: true },
     type: { type: String, default: "general", trim: true },
+    meta: {
+      orderId: { type: String, trim: true },
+      status: { type: String, trim: true },
+      reason: { type: String, trim: true },
+    },
     read: { type: Boolean, default: false },
   },
   { timestamps: true }
@@ -319,10 +326,10 @@ const Feedback = mongoose.model("Feedback", feedbackSchema);
 const Transaction = mongoose.model("Transaction", transactionSchema);
 const PaymentSettings = mongoose.model("PaymentSettings", paymentSettingsSchema);
 
-async function addNotification(userEmail, title, message, type = "general") {
+async function addNotification(userEmail, title, message, type = "general", meta = undefined) {
   const email = normalizeEmail(userEmail);
   if (!email) return;
-  await Notification.create({ userEmail: email, title, message, type });
+  await Notification.create({ userEmail: email, title, message, type, meta });
 }
 
 app.get("/api/health", async (req, res) => {
@@ -751,6 +758,7 @@ app.patch("/api/orders/:id/status", async (req, res) => {
     const id = String(req.params.id || "").trim();
     const nextStatus = String(req.body.status || "").trim();
     const declineReason = String(req.body.declineReason || "").trim();
+    const reason = String(req.body.reason || declineReason || "").trim();
     if (!nextStatus) return clientError(res, "status is required");
 
     const order = await Order.findOne({ id });
@@ -768,6 +776,15 @@ app.patch("/api/orders/:id/status", async (req, res) => {
     }
 
     const current = order.status || ORDER_STATUSES.PENDING_APPROVAL;
+    const needsReason =
+      nextStatus === ORDER_STATUSES.DECLINED_ORDER ||
+      nextStatus === ORDER_STATUSES.CANCELLED ||
+      (nextStatus === ORDER_STATUSES.AWAITING_PAYMENT &&
+        current === ORDER_STATUSES.PAYMENT_SUBMITTED);
+
+    if (needsReason && !reason) {
+      return clientError(res, "reason is required", 400);
+    }
     const allowed = new Set();
 
     if (current === ORDER_STATUSES.PENDING_APPROVAL) {
@@ -802,15 +819,16 @@ app.patch("/api/orders/:id/status", async (req, res) => {
       order.paymentSubmittedAt = new Date();
       order.paymentDueAt = undefined;
     }
-    if (nextStatus === ORDER_STATUSES.DECLINED_ORDER) {
-      order.declineReason = declineReason || undefined;
-    }
-    if (nextStatus === ORDER_STATUSES.CANCELLED) {
-      order.declineReason = declineReason || undefined;
+    if (needsReason) {
+      order.declineReason = reason || undefined;
+      order.rejectionReason = reason || undefined;
+      order.lastActionReason = reason || undefined;
+    } else if (reason) {
+      order.lastActionReason = reason;
     }
 
     order.status = nextStatus;
-    addStatusHistory(order, nextStatus, declineReason || "");
+    addStatusHistory(order, nextStatus, reason || "");
 
     await order.save();
 
@@ -837,8 +855,11 @@ app.patch("/api/orders/:id/status", async (req, res) => {
     await addNotification(
       order.customerEmail,
       "Order Update",
-      `Order ${order.id} status changed to ${nextStatus}.`,
-      "order"
+      reason
+        ? `Order ${order.id} status changed to ${nextStatus}. Reason: ${reason}`
+        : `Order ${order.id} status changed to ${nextStatus}.`,
+      "order",
+      { orderId: order.id, status: nextStatus, reason: reason || undefined }
     );
 
     res.json({ ok: true, order });

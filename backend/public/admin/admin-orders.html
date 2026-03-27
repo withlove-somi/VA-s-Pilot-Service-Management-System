@@ -192,6 +192,10 @@
                     expired: 'Expired'
                 };
                 const statusLabel = statusLabelMap[currentStatus] || (order.status || 'Unknown');
+                const dueAt = order.paymentDueAt ? new Date(order.paymentDueAt).toISOString() : "";
+                const timeLeftHtml = currentStatus === 'awaiting_payment' && dueAt
+                    ? `<div class="text-[10px] text-yellow-300 mt-1">Time left: <span class="time-left" data-due-at="${dueAt}">--</span></div>`
+                    : '';
 
                 if (currentStatus === 'awaiting_payment') {
                     statusColor = "text-yellow-400 border-yellow-400/20 bg-yellow-400/5";
@@ -215,7 +219,10 @@
                         <div class="flex-1 w-full">
                             <div class="flex items-center justify-between mb-4">
                                 <span class="text-[11px] font-bold text-gray-500 tracking-[0.2em] uppercase">Order ID: ${order.id}</span>
-                                <span class="text-[11px] font-bold uppercase tracking-widest ${statusColor} px-3 py-1.5 rounded border">${statusLabel}</span>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-[11px] font-bold uppercase tracking-widest ${statusColor} px-3 py-1.5 rounded border">${statusLabel}</span>
+                                    ${timeLeftHtml}
+                                </div>
                             </div>
                             
                             <div class="flex items-center gap-5 mb-6">
@@ -303,6 +310,32 @@
                 `;
                 container.appendChild(card);
             });
+            startCountdowns();
+        }
+
+        let countdownTimer = null;
+        function formatRemaining(ms) {
+            if (ms <= 0) return 'Expired';
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        function startCountdowns() {
+            if (countdownTimer) clearInterval(countdownTimer);
+            const nodes = document.querySelectorAll('.time-left[data-due-at]');
+            const tick = () => {
+                nodes.forEach((node) => {
+                    const dueAt = node.dataset.dueAt;
+                    if (!dueAt) return;
+                    const ms = new Date(dueAt).getTime() - Date.now();
+                    node.textContent = formatRemaining(ms);
+                });
+            };
+            tick();
+            countdownTimer = setInterval(tick, 1000);
         }
 
         function openProofModal(orderId) {
@@ -343,18 +376,35 @@
             }, 300);
         }
 
-        function handleProofDecision(newStatus) {
-            if (currentReviewingOrderId) {
-                updateStatus(currentReviewingOrderId, newStatus);
-                closeProofModal();
+        function requireReason(actionLabel) {
+            const reason = prompt(`Please enter a reason for "${actionLabel}":`);
+            if (!reason || !reason.trim()) {
+                alert('Reason is required.');
+                return null;
             }
+            return reason.trim();
         }
 
-        async function updateStatus(orderId, newStatus) {
+        function handleProofDecision(newStatus) {
+            if (!currentReviewingOrderId) return;
+            let reason = "";
+            if (newStatus === 'awaiting_payment') {
+                reason = requireReason("Reject Payment");
+                if (!reason) return;
+            }
+            if (newStatus === 'cancelled') {
+                reason = requireReason("Cancel Order");
+                if (!reason) return;
+            }
+            updateStatus(currentReviewingOrderId, newStatus, reason);
+            closeProofModal();
+        }
+
+        async function updateStatus(orderId, newStatus, reason = "") {
             try {
                 await apiJson(`/api/orders/${encodeURIComponent(orderId)}/status`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({ status: newStatus, reason })
                 });
                 await loadAdminOrders();
             } catch (err) {
