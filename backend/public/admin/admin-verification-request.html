@@ -133,11 +133,21 @@
       }
     }
 
-    function openImageModal(src) {
-      if (!src) return;
-      document.getElementById('image-modal-preview').src = src;
-      document.getElementById('image-modal').classList.remove('hidden');
-      document.getElementById('image-modal').classList.add('flex');
+    async function openImageModal(requestId, field) {
+      try {
+        const payload = await apiJson(`/api/verifications/${encodeURIComponent(requestId)}`);
+        const request = payload.request || {};
+        const src = request[field] || '';
+        if (!src) {
+          alert('Image not available.');
+          return;
+        }
+        document.getElementById('image-modal-preview').src = src;
+        document.getElementById('image-modal').classList.remove('hidden');
+        document.getElementById('image-modal').classList.add('flex');
+      } catch (err) {
+        alert(err.message || 'Unable to load image.');
+      }
     }
 
     function closeImageModal() {
@@ -149,7 +159,7 @@
       const container = document.getElementById('requests');
       try {
         const [verificationPayload, usersPayload] = await Promise.all([
-          apiJson('/api/verifications'),
+          apiJson('/api/verifications?status=Pending&lite=1'),
           apiJson('/api/users').catch(() => ({ users: [] }))
         ]);
         requestsCache = verificationPayload.requests || [];
@@ -157,7 +167,7 @@
           (usersPayload.users || [])
             .map((u) => [
               String(u.email || '').trim().toLowerCase(),
-              String(u.fullname || u.name || '').trim()
+              String([u.firstName, u.lastName].filter(Boolean).join(' ').trim() || u.fullname || u.name || '').trim()
             ])
             .filter(([email, name]) => email && name)
         );
@@ -201,11 +211,11 @@
             <div class="bg-white/5 border border-white/10 rounded-lg p-3"><div class="text-gray-500 text-xs">ID Number</div><div>${r.govIdNumber || 'N/A'}</div></div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-            <button type="button" onclick="openImageModal('${(r.govIdPhoto || '').replace(/'/g, "&#39;")}')" class="text-left">
-              <img src="${r.govIdPhoto || ''}" alt="ID" class="w-full h-48 object-cover rounded-lg border border-white/10 bg-black/30 hover:border-brand-pink/40 transition-all" />
+            <button type="button" onclick="openImageModal('${r.id}','govIdPhoto')" class="text-left w-full h-48 rounded-lg border border-white/10 bg-black/30 hover:border-brand-pink/40 transition-all flex items-center justify-center text-sm text-gray-300">
+              View ID Photo
             </button>
-            <button type="button" onclick="openImageModal('${(r.selfieWithId || '').replace(/'/g, "&#39;")}')" class="text-left">
-              <img src="${r.selfieWithId || ''}" alt="Selfie" class="w-full h-48 object-cover rounded-lg border border-white/10 bg-black/30 hover:border-brand-pink/40 transition-all" />
+            <button type="button" onclick="openImageModal('${r.id}','selfieWithId')" class="text-left w-full h-48 rounded-lg border border-white/10 bg-black/30 hover:border-brand-pink/40 transition-all flex items-center justify-center text-sm text-gray-300">
+              View Selfie
             </button>
           </div>
           ${r.reason ? `<div class="text-sm text-red-300 mb-3">Reason: ${r.reason}</div>` : ''}

@@ -260,6 +260,9 @@ const verificationRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+verificationRequestSchema.index({ status: 1, createdAt: -1 });
+verificationRequestSchema.index({ createdAt: -1 });
+
 const chatMessageSchema = new mongoose.Schema(
   {
     userEmail: { type: String, required: true, lowercase: true, trim: true },
@@ -1020,10 +1023,25 @@ app.get("/api/verifications", async (req, res) => {
     const filter = {};
     if (req.query.userEmail) filter.userEmail = normalizeEmail(req.query.userEmail);
     if (req.query.status) filter.status = String(req.query.status);
-    const requests = await VerificationRequest.find(filter)
-      .sort({ createdAt: -1 })
-      .lean();
+    const lite = String(req.query.lite || "").trim().toLowerCase();
+    let query = VerificationRequest.find(filter).sort({ createdAt: -1 });
+    if (lite === "1" || lite === "true" || lite === "yes") {
+      query = query.select("-govIdPhoto -selfieWithId");
+    }
+    const requests = await query.allowDiskUse(true).lean();
     res.json({ ok: true, requests });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.get("/api/verifications/:id", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    if (!id) return clientError(res, "id is required");
+    const request = await VerificationRequest.findOne({ id }).lean();
+    if (!request) return clientError(res, "Verification request not found", 404);
+    res.json({ ok: true, request });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
