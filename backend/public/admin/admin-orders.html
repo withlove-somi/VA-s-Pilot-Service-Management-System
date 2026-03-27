@@ -126,6 +126,7 @@
         let currentReviewingOrderId = null;
         let ordersCache = [];
         let transactionsCache = [];
+        let usersCache = [];
 
         async function apiJson(path, options = {}) {
             const response = await fetch(`${API_BASE}${path}`, {
@@ -153,12 +154,17 @@
         async function loadAdminOrders() {
             const container = document.getElementById('admin-orders-list');
             try {
-                const [ordersPayload, transactionsPayload] = await Promise.all([
+                const [ordersPayload, transactionsPayload, usersPayload] = await Promise.all([
                     apiJson('/api/orders'),
-                    apiJson('/api/transactions')
+                    apiJson('/api/transactions'),
+                    apiJson('/api/users')
                 ]);
                 ordersCache = ordersPayload.orders || [];
                 transactionsCache = transactionsPayload.transactions || [];
+                usersCache = (usersPayload.users || []).map((u) => ({
+                    ...u,
+                    email: String(u.email || '').trim().toLowerCase()
+                }));
             } catch (err) {
                 container.innerHTML = `<div class="bg-black/40 border border-red-500/30 rounded-2xl p-8 text-center text-red-300 text-sm">Unable to load orders: ${err.message || 'Request failed'}</div>`;
                 return;
@@ -177,7 +183,18 @@
 
             container.innerHTML = '';
 
+            const usersByEmail = new Map(usersCache.map((u) => [u.email, u]));
+
             activeOrders.forEach(order => {
+                const customerEmail = String(order.customerEmail || order.customer_email || '').trim().toLowerCase();
+                const customer = usersByEmail.get(customerEmail);
+                const displayName = customer?.fullname || customer?.name || order.customerName || order.clientName || 'Standard Pilot';
+                const avatarHtml = customer?.profileImage
+                    ? `<img src="${customer.profileImage}" alt="${displayName}" class="w-14 h-14 rounded-xl object-cover border border-white/10">`
+                    : `<div class="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-pink shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                       </div>`;
+
                 let statusColor = "text-gray-400 border-white/10";
                 let adminActions = "";
                 const currentStatus = String(order.status || '').trim().toLowerCase();
@@ -226,12 +243,10 @@
                             </div>
                             
                             <div class="flex items-center gap-5 mb-6">
-                                <div class="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-pink shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                </div>
+                                ${avatarHtml}
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <h3 class="text-2xl font-bold text-white tracking-tight">${order.customerName || order.clientName || 'Standard Pilot'}</h3>
+                                        <h3 class="text-2xl font-bold text-white tracking-tight">${displayName}</h3>
                                         <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${order.customerVerified ? 'text-green-300 border-green-400/30 bg-green-400/10' : 'text-yellow-300 border-yellow-400/30 bg-yellow-400/10'}">
                                             ${order.customerVerified ? 'Verified' : 'Unverified'}
                                         </span>
