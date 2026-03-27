@@ -103,7 +103,7 @@
 
   <script>
     const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
-    const socket = io(API_BASE);
+    const socket = io(API_BASE); // Connects to the live Socket.io server
 
     async function apiJson(path, options = {}) {
       const response = await fetch(`${API_BASE}${path}`, {
@@ -111,11 +111,7 @@
         ...options
       });
       let data = {};
-      try {
-        data = await response.json();
-      } catch (e) {
-        data = {};
-      }
+      try { data = await response.json(); } catch (e) { data = {}; }
       if (!response.ok || data.ok === false) {
         throw new Error(data.error || `Request failed (${response.status})`);
       }
@@ -124,41 +120,24 @@
 
     let selectedEmail = '';
     let allUsers = [];
-    const ADMIN_DELETED_KEY = 'va_admin_deleted_threads';
-
-    function getMessagesStore() {
-      return JSON.parse(localStorage.getItem('va_pilot_messages')) || {};
-    }
-
-    function saveMessagesStore(store) {
-      localStorage.setItem('va_pilot_messages', JSON.stringify(store));
-    }
-
-    function getAdminDeletedThreads() {
-      return JSON.parse(localStorage.getItem(ADMIN_DELETED_KEY)) || {};
-    }
-
-    function saveAdminDeletedThreads(store) {
-      localStorage.setItem(ADMIN_DELETED_KEY, JSON.stringify(store));
-    }
 
     function setSelectedEmail(email) {
       selectedEmail = email;
       highlightSelected();
       document.getElementById('chat-panel').classList.remove('hidden');
       renderChatHeader();
-      socket.emit('joinChat', email); // <-- Tells Railway to connect the live room!
+      
+      // Tell Railway we are listening to this customer's chat room!
+      socket.emit('joinChat', email); 
+      
       renderMessages();
     }
 
     function highlightSelected() {
       document.querySelectorAll('[data-customer]').forEach((card) => {
         const email = card.getAttribute('data-customer');
-        if (email === selectedEmail) {
-          card.classList.add('border-brand-pink/50');
-        } else {
-          card.classList.remove('border-brand-pink/50');
-        }
+        if (email === selectedEmail) card.classList.add('border-brand-pink/50');
+        else card.classList.remove('border-brand-pink/50');
       });
     }
 
@@ -168,88 +147,33 @@
       const profileLink = document.getElementById('profile-link');
       const avatarImg = document.getElementById('chat-avatar-img');
       const avatarFallback = document.getElementById('chat-avatar-fallback');
-      const deleteBtn = document.getElementById('chat-delete');
       const user = allUsers.find((u) => String(u.email || '').trim().toLowerCase() === selectedEmail);
+      
       if (!selectedEmail || !user) {
         nameEl.textContent = 'No customer selected';
         emailEl.textContent = 'Choose a customer from the left panel';
         profileLink.classList.add('pointer-events-none', 'opacity-40');
-        profileLink.href = 'admin-customer-profile.html';
-        avatarImg.removeAttribute('src');
         avatarImg.classList.add('hidden');
         avatarFallback.textContent = '?';
         avatarFallback.classList.remove('hidden');
-        deleteBtn.classList.add('opacity-40', 'pointer-events-none');
         return;
       }
+      
       const displayName = user.fullname || user.name || 'Customer';
       nameEl.textContent = displayName;
       emailEl.textContent = selectedEmail;
       profileLink.classList.remove('pointer-events-none', 'opacity-40');
       profileLink.href = `admin-customer-profile.html?email=${encodeURIComponent(selectedEmail)}`;
-      const initials = displayName
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0].toUpperCase())
-        .join('') || 'CU';
+      
+      const initials = displayName.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('') || 'CU';
       if (user.profileImage) {
         avatarImg.src = user.profileImage;
         avatarImg.classList.remove('hidden');
         avatarFallback.classList.add('hidden');
       } else {
-        avatarImg.removeAttribute('src');
         avatarImg.classList.add('hidden');
         avatarFallback.textContent = initials;
         avatarFallback.classList.remove('hidden');
-      }
-      deleteBtn.classList.remove('opacity-40', 'pointer-events-none');
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    async function renderMessages() {
-      const box = document.getElementById('messages');
-      const input = document.getElementById('chat-input');
-      const sendBtn = document.getElementById('chat-send');
-
-      if (!selectedEmail) {
-        box.innerHTML = '<p class="text-gray-500">Select a customer from the left panel.</p>';
-        input.disabled = true;
-        sendBtn.disabled = true;
-        return;
-      }
-
-      input.disabled = false;
-      sendBtn.disabled = false;
-      box.innerHTML = '<p class="text-gray-500">Loading messages from server...</p>';
-
-      try {
-        // Fetch history from your live MongoDB database!
-        const payload = await apiJson('/api/messages');
-        const thread = (payload.messages || []).filter(m => m.userEmail === selectedEmail);
-
-        if (!thread.length) {
-          box.innerHTML = '<p class="text-gray-500">No messages yet.</p>';
-          return;
-        }
-
-        box.innerHTML = '';
-        thread.forEach((msg) => appendMessageToBox(msg, box));
-        box.scrollTop = box.scrollHeight;
-      } catch (error) {
-        box.innerHTML = '<p class="text-red-500">Failed to load messages.</p>';
       }
     }
 
@@ -267,7 +191,95 @@
       box.appendChild(row);
     }
 
-    // Send message to live Railway API
+    // Load messages from the live database
+    async function renderMessages() {
+      const box = document.getElementById('messages');
+      const input = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('chat-send');
+
+      if (!selectedEmail) {
+        box.innerHTML = '<p class="text-gray-500">Select a customer from the left panel.</p>';
+        input.disabled = true;
+        sendBtn.disabled = true;
+        return;
+      }
+
+      input.disabled = false;
+      sendBtn.disabled = false;
+      box.innerHTML = '<p class="text-gray-500">Loading messages from server...</p>';
+
+      try {
+        const payload = await apiJson('/api/messages');
+        const thread = (payload.messages || []).filter(m => m.userEmail === selectedEmail);
+
+        if (!thread.length) {
+          box.innerHTML = '<p class="text-gray-500">No messages yet.</p>';
+          return;
+        }
+
+        box.innerHTML = '';
+        thread.forEach((msg) => appendMessageToBox(msg, box));
+        box.scrollTop = box.scrollHeight;
+      } catch (error) {
+        box.innerHTML = '<p class="text-red-500">Failed to load messages.</p>';
+      }
+    }
+
+    // Load customers list (This is the missing function!)
+    async function renderInbox() {
+      const container = document.getElementById('customers');
+      try {
+        const usersPayload = await apiJson('/api/users');
+        const users = usersPayload.users || [];
+        const validUsers = users.filter((u) => u.email && String(u.role || 'customer').toLowerCase() !== 'admin');
+        
+        if (!validUsers.length) {
+          container.innerHTML = '<div class="p-8 rounded-xl border border-white/10 bg-black/30 text-gray-400">No customers found.</div>';
+          return;
+        }
+
+        allUsers = validUsers;
+        container.innerHTML = '';
+        validUsers.forEach((u) => {
+          const email = String(u.email || '').trim().toLowerCase();
+          const name = (u.fullname || u.name || 'Customer').trim();
+          const initials = name.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('');
+          
+          const avatarContent = u.profileImage
+            ? `<img src="${u.profileImage}" alt="${name}" class="w-full h-full object-cover">`
+            : `<span class="text-brand-purple font-bold">${initials || 'CU'}</span>`;
+            
+          const card = document.createElement('div');
+          card.className = 'bg-black/40 border border-white/10 rounded-2xl p-4 hover:border-brand-pink/40 hover:bg-white/5 transition-all cursor-pointer';
+          card.setAttribute('data-customer', email);
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-brand-purple/20 border border-brand-purple/40 flex items-center justify-center overflow-hidden">
+                  ${avatarContent}
+                </div>
+                <div>
+                  <div class="font-bold text-lg">${name}</div>
+                  <div class="text-sm text-gray-400">${email}</div>
+                </div>
+              </div>
+            </div>
+          `;
+          card.addEventListener('click', () => setSelectedEmail(email));
+          container.appendChild(card);
+        });
+
+        // Preselect customer if URL has ?email=
+        const params = new URLSearchParams(window.location.search);
+        const preselect = String(params.get('email') || '').trim().toLowerCase();
+        if (preselect) setSelectedEmail(preselect);
+
+      } catch (err) {
+        container.innerHTML = `<div class="p-8 text-red-300">Unable to load inbox.</div>`;
+      }
+    }
+
+    // Send message to live API
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!selectedEmail) return;
@@ -281,11 +293,7 @@
       try {
         await apiJson('/api/messages', {
           method: 'POST',
-          body: JSON.stringify({
-            userEmail: selectedEmail,
-            sender: 'admin',
-            message: text
-          })
+          body: JSON.stringify({ userEmail: selectedEmail, sender: 'admin', message: text })
         });
       } catch (error) {
         console.error("Failed to send message:", error);
@@ -302,28 +310,8 @@
       }
     });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    document.getElementById('chat-delete').addEventListener('click', () => {
-      if (!selectedEmail) return;
-      const deletedMap = getAdminDeletedThreads();
-      deletedMap[selectedEmail] = new Date().toISOString();
-      saveAdminDeletedThreads(deletedMap);
-      renderMessages();
+    document.addEventListener('DOMContentLoaded', () => {
+      renderInbox();
     });
   </script>
     <script src="sidebar-active.js"></script>
