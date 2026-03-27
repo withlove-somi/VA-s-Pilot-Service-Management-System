@@ -146,6 +146,7 @@
       const nameEl = document.getElementById('chat-name');
       const emailEl = document.getElementById('chat-email');
       const profileLink = document.getElementById('profile-link');
+      const deleteBtn = document.getElementById('chat-delete');
       const avatarImg = document.getElementById('chat-avatar-img');
       const avatarFallback = document.getElementById('chat-avatar-fallback');
       const user = allUsers.find((u) => String(u.email || '').trim().toLowerCase() === selectedEmail);
@@ -154,6 +155,8 @@
         nameEl.textContent = 'No customer selected';
         emailEl.textContent = 'Choose a customer from the left panel';
         profileLink.classList.add('pointer-events-none', 'opacity-40');
+        deleteBtn.classList.add('pointer-events-none', 'opacity-40');
+        deleteBtn.disabled = true;
         avatarImg.classList.add('hidden');
         avatarFallback.textContent = '?';
         avatarFallback.classList.remove('hidden');
@@ -164,6 +167,8 @@
       nameEl.textContent = displayName;
       emailEl.textContent = selectedEmail;
       profileLink.classList.remove('pointer-events-none', 'opacity-40');
+      deleteBtn.classList.remove('pointer-events-none', 'opacity-40');
+      deleteBtn.disabled = false;
       profileLink.href = `admin-customer-profile.html?email=${encodeURIComponent(selectedEmail)}`;
       
       const initials = displayName.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('') || 'CU';
@@ -210,7 +215,7 @@
       box.innerHTML = '<p class="text-gray-500">Loading messages from server...</p>';
 
       try {
-        const payload = await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}`);
+        const payload = await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}&adminView=1`);
         const thread = payload.messages || [];
 
         if (!thread.length) {
@@ -280,6 +285,25 @@
       }
     }
 
+    document.getElementById('chat-delete').addEventListener('click', async () => {
+      if (!selectedEmail) return;
+      const confirmed = window.confirm('Delete this chat for admin view only? This will not delete the user.');
+      if (!confirmed) return;
+
+      const deleteBtn = document.getElementById('chat-delete');
+      deleteBtn.disabled = true;
+      try {
+        await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}&adminOnly=1`, {
+          method: 'DELETE'
+        });
+        await renderMessages();
+      } catch (error) {
+        alert(error.message || 'Unable to delete chat.');
+      } finally {
+        deleteBtn.disabled = false;
+      }
+    });
+
     // Send message to live API
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -321,5 +345,3 @@
     <script src="sidebar-active.js"></script>
 </body>
 </html>
-
-

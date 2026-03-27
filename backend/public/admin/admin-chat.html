@@ -236,7 +236,7 @@
       }
 
       try {
-        const payload = await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}`);
+        const payload = await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}&adminView=1`);
         const thread = payload.messages || [];
         if (!thread.length) {
           box.innerHTML = '<p class="text-gray-500">No messages yet.</p>';
@@ -321,7 +321,7 @@
     confirmDelete.addEventListener('click', async () => {
       if (!selectedEmail) return;
       try {
-        await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}`, {
+        await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}&adminOnly=1`, {
           method: 'DELETE'
         });
         window.location.href = 'admin-inbox.html';

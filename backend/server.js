@@ -3,6 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
 const http = require("http");
+const https = require("https");
 const { Server } = require("socket.io");
 
 const app = express();
@@ -35,6 +36,93 @@ function parseNumberLike(value, defaultValue = 0) {
     if (Number.isFinite(parsed)) return parsed;
   }
   return defaultValue;
+}
+
+function isTruthy(value) {
+  if (value === true) return true;
+  if (value === false || value == null) return false;
+  const normalized = String(value).trim().toLowerCase();
+  return ["1", "true", "yes", "y", "on"].includes(normalized);
+}
+
+function getEmailJsConfig() {
+  return {
+    publicKey: process.env.EMAILJS_PUBLIC_KEY || process.env.EMAILJS_USER_ID || "SgkQyK2k1yc7lGO_R",
+    privateKey: process.env.EMAILJS_PRIVATE_KEY || process.env.EMAILJS_ACCESS_TOKEN || "",
+    serviceId: process.env.EMAILJS_SERVICE_ID || "service_8j4tgje",
+    templateId: process.env.EMAILJS_TEMPLATE_ID || "template_b4qhvvg",
+  };
+}
+
+function formatActionType(purpose) {
+  const normalized = String(purpose || "").trim().toLowerCase();
+  if (normalized === "register") return "Register Account";
+  if (normalized === "reset_password") return "Change Password";
+  if (normalized === "login") return "Login Verification";
+  return String(purpose || "OTP Verification");
+}
+
+function buildTemplateParams(email, otp, purpose, name) {
+  const actionType = formatActionType(purpose);
+  return {
+    email,
+    otp_code: otp,
+    action_type: actionType,
+    to_email: email,
+    to_name: name || "Pilot",
+    otp_purpose: purpose,
+    expires_in: "5 minutes",
+  };
+}
+
+function sendEmailJsRequest(payload) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(payload);
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(data),
+      },
+    };
+
+    const req = https.request("https://api.emailjs.com/api/v1.0/email/send", options, (res) => {
+      let body = "";
+      res.on("data", (chunk) => {
+        body += chunk;
+      });
+      res.on("end", () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve();
+        } else {
+          const detail = body || `EmailJS request failed (${res.statusCode})`;
+          reject(new Error(detail));
+        }
+      });
+    });
+
+    req.on("error", (err) => reject(err));
+    req.write(data);
+    req.end();
+  });
+}
+
+async function sendEmailJsOtp(email, otp, purpose, name) {
+  const config = getEmailJsConfig();
+  if (!config.publicKey || !config.serviceId || !config.templateId || !config.privateKey) {
+    throw new Error("EmailJS config missing. Set EMAILJS_PUBLIC_KEY, EMAILJS_PRIVATE_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID.");
+  }
+
+  const templateParams = buildTemplateParams(email, otp, purpose, name);
+  const payload = {
+    service_id: config.serviceId,
+    template_id: config.templateId,
+    user_id: config.publicKey,
+    accessToken: config.privateKey,
+    template_params: templateParams,
+  };
+
+  await sendEmailJsRequest(payload);
 }
 
 const ORDER_STATUSES = {
@@ -167,6 +255,7 @@ const userSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    adminChatClearedAt: { type: Date },
   },
   { timestamps: true }
 );
@@ -409,6 +498,23 @@ app.post("/api/auth/login", async (req, res) => {
         role: user.role,
       },
     });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.post("/api/otp/send", async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const otp = String(req.body.otp || "").trim();
+    const purpose = String(req.body.purpose || "").trim();
+    const name = String(req.body.name || "").trim();
+
+    if (!email) return clientError(res, "email is required");
+    if (!otp) return clientError(res, "otp is required");
+
+    await sendEmailJsOtp(email, otp, purpose, name);
+    res.json({ ok: true });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -1130,7 +1236,17 @@ app.get("/api/messages", async (req, res) => {
   try {
     const userEmail = normalizeEmail(req.query.userEmail);
     if (!userEmail) return clientError(res, "userEmail is required");
-    const messages = await ChatMessage.find({ userEmail })
+    const filter = { userEmail };
+    if (isTruthy(req.query.adminView)) {
+      const user = await User.findOne({ email: userEmail })
+        .select("adminChatClearedAt")
+        .lean();
+      if (user && user.adminChatClearedAt) {
+        filter.createdAt = { $gt: user.adminChatClearedAt };
+      }
+    }
+
+    const messages = await ChatMessage.find(filter)
       .sort({ createdAt: 1 })
       .lean();
     res.json({ ok: true, messages });
@@ -1166,6 +1282,15 @@ app.delete("/api/messages", async (req, res) => {
   try {
     const userEmail = normalizeEmail(req.query.userEmail || req.body.userEmail);
     if (!userEmail) return clientError(res, "userEmail is required");
+    if (isTruthy(req.query.adminOnly || req.body.adminOnly)) {
+      const clearedAt = new Date();
+      await User.updateOne(
+        { email: userEmail },
+        { $set: { adminChatClearedAt: clearedAt } }
+      );
+      return res.json({ ok: true, adminOnly: true, clearedAt });
+    }
+
     const result = await ChatMessage.deleteMany({ userEmail });
     res.json({ ok: true, deletedCount: result.deletedCount || 0 });
   } catch (error) {
