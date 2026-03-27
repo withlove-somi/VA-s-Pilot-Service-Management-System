@@ -209,8 +209,8 @@
       box.innerHTML = '<p class="text-gray-500">Loading messages from server...</p>';
 
       try {
-        const payload = await apiJson('/api/messages');
-        const thread = (payload.messages || []).filter(m => m.userEmail === selectedEmail);
+        const payload = await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}`);
+        const thread = payload.messages || [];
 
         if (!thread.length) {
           box.innerHTML = '<p class="text-gray-500">No messages yet.</p>';
@@ -312,9 +312,11 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       renderInbox();
+      setInterval(() => {
+        if (selectedEmail) renderMessages();
+      }, 3000);
     });
   </script>
     <script src="sidebar-active.js"></script>
 </body>
 </html>
-

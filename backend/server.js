@@ -858,6 +858,17 @@ app.post("/api/messages", async (req, res) => {
   }
 });
 
+app.delete("/api/messages", async (req, res) => {
+  try {
+    const userEmail = normalizeEmail(req.query.userEmail || req.body.userEmail);
+    if (!userEmail) return clientError(res, "userEmail is required");
+    const result = await ChatMessage.deleteMany({ userEmail });
+    res.json({ ok: true, deletedCount: result.deletedCount || 0 });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 app.post("/api/feedback", async (req, res) => {
   try {
     const message = String(req.body.message || "").trim();

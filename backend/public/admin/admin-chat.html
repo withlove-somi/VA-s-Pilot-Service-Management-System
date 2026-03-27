@@ -170,14 +170,6 @@
       }
     }
 
-    function getMessagesStore() {
-      return JSON.parse(localStorage.getItem('va_pilot_messages')) || {};
-    }
-
-    function saveMessagesStore(store) {
-      localStorage.setItem('va_pilot_messages', JSON.stringify(store));
-    }
-
     function renderThreadList() {
       const users = getUsers();
       const container = document.getElementById('thread-list');
@@ -196,7 +188,7 @@
       });
     }
 
-    function renderMessages() {
+    async function renderMessages() {
       const box = document.getElementById('messages');
       const nameEl = document.getElementById('chat-name');
       const emailEl = document.getElementById('chat-email');
@@ -245,27 +237,31 @@
         return;
       }
 
-      const store = getMessagesStore();
-      const thread = store[selectedEmail] || [];
-      if (!thread.length) {
-        box.innerHTML = '<p class="text-gray-500">No messages yet.</p>';
-        return;
-      }
+      try {
+        const payload = await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}`);
+        const thread = payload.messages || [];
+        if (!thread.length) {
+          box.innerHTML = '<p class="text-gray-500">No messages yet.</p>';
+          return;
+        }
 
-      box.innerHTML = '';
-      thread.forEach((msg) => {
-        const isAdmin = msg.sender === 'admin';
-        const row = document.createElement('div');
-        row.className = `flex ${isAdmin ? 'justify-end' : 'justify-start'}`;
-        row.innerHTML = `
-          <div class="max-w-[70%] px-4 py-2 rounded-lg ${isAdmin ? 'bg-brand-purple/20 border border-brand-purple/40' : 'bg-white/5 border border-white/10'}">
-            <div class="text-sm">${msg.text}</div>
-            <div class="text-[10px] text-gray-500 mt-1">${new Date(msg.createdAt).toLocaleString()}</div>
-          </div>
-        `;
-        box.appendChild(row);
-      });
-      box.scrollTop = box.scrollHeight;
+        box.innerHTML = '';
+        thread.forEach((msg) => {
+          const isAdmin = msg.sender === 'admin';
+          const row = document.createElement('div');
+          row.className = `flex ${isAdmin ? 'justify-end' : 'justify-start'}`;
+          row.innerHTML = `
+            <div class="max-w-[70%] px-4 py-2 rounded-lg ${isAdmin ? 'bg-brand-purple/20 border border-brand-purple/40' : 'bg-white/5 border border-white/10'}">
+              <div class="text-sm">${msg.message || msg.text || ''}</div>
+              <div class="text-[10px] text-gray-500 mt-1">${new Date(msg.createdAt || Date.now()).toLocaleString()}</div>
+            </div>
+          `;
+          box.appendChild(row);
+        });
+        box.scrollTop = box.scrollHeight;
+      } catch (err) {
+        box.innerHTML = '<p class="text-red-400">Unable to load messages.</p>';
+      }
     }
 
     function initSelectedEmail() {
@@ -273,7 +269,7 @@
       selectedEmail = String(params.get('email') || '').trim().toLowerCase();
     }
 
-    document.getElementById('chat-form').addEventListener('submit', (e) => {
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!selectedEmail) return;
 
@@ -281,26 +277,27 @@
       const text = input.value.trim();
       if (!text) return;
 
-      const store = getMessagesStore();
-      const thread = store[selectedEmail] || [];
-      thread.push({ sender: 'admin', text, createdAt: new Date().toISOString() });
-      store[selectedEmail] = thread;
-      saveMessagesStore(store);
-
-      input.value = '';
-      renderMessages();
-      renderThreadList();
-    });
-
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'va_pilot_messages') renderMessages();
+      try {
+        await apiJson('/api/messages', {
+          method: 'POST',
+          body: JSON.stringify({ userEmail: selectedEmail, sender: 'admin', message: text })
+        });
+        input.value = '';
+        await renderMessages();
+        renderThreadList();
+      } catch (err) {
+        alert(err.message || 'Unable to send message.');
+      }
     });
 
     document.addEventListener('DOMContentLoaded', async () => {
       initSelectedEmail();
       await refreshUsers();
       renderThreadList();
-      renderMessages();
+      await renderMessages();
+      setInterval(() => {
+        if (selectedEmail) renderMessages();
+      }, 3000);
     });
 
     const deleteModal = document.getElementById('delete-modal');
@@ -323,12 +320,16 @@
       if (event.target.classList.contains('delete-overlay')) closeDeleteModal();
     });
 
-    confirmDelete.addEventListener('click', () => {
+    confirmDelete.addEventListener('click', async () => {
       if (!selectedEmail) return;
-      const store = getMessagesStore();
-      delete store[selectedEmail];
-      saveMessagesStore(store);
-      window.location.href = 'admin-inbox.html';
+      try {
+        await apiJson(`/api/messages?userEmail=${encodeURIComponent(selectedEmail)}`, {
+          method: 'DELETE'
+        });
+        window.location.href = 'admin-inbox.html';
+      } catch (err) {
+        alert(err.message || 'Unable to delete chat.');
+      }
     });
   </script>
     <script src="sidebar-active.js"></script>

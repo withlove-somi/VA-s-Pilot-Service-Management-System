@@ -41,13 +41,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
+    const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
 
-    function getStore() {
-        return JSON.parse(localStorage.getItem('va_pilot_messages')) || {};
-    }
-
-    function saveStore(store) {
-        localStorage.setItem('va_pilot_messages', JSON.stringify(store));
+    async function apiJson(path, options = {}) {
+        const response = await fetch(`${API_BASE}${path}`, {
+            headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+            ...options
+        });
+        let data = {};
+        try {
+            data = await response.json();
+        } catch (e) {
+            data = {};
+        }
+        if (!response.ok || data.ok === false) {
+            throw new Error(data.error || `Request failed (${response.status})`);
+        }
+        return data;
     }
 
     function toggleChat() {
@@ -57,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatWindow.classList.toggle('opacity-100');
         if (!chatWindow.classList.contains('scale-0')) {
             chatInput.focus();
-            renderThread();
+            refreshThread();
         }
     }
 
@@ -67,10 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return div.innerHTML;
     }
 
-    function renderThread() {
-        const store = getStore();
-        const thread = store[threadEmail] || [];
-
+    function renderThread(thread) {
         if (!thread.length) {
             chatMessages.innerHTML = `
                 <div class="flex flex-col items-start gap-1 w-full">
@@ -85,12 +92,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         chatMessages.innerHTML = '';
         thread.forEach((msg) => {
-            const mine = msg.sender === 'customer';
+            const mine = String(msg.sender || '').toLowerCase() === 'customer';
+            const messageText = msg.message || msg.text || '';
             const row = document.createElement('div');
             row.className = `flex flex-col ${mine ? 'items-end' : 'items-start'} gap-1 w-full`;
             row.innerHTML = `
                 <span class="text-[10px] ${mine ? 'text-cyan-300 mr-1' : 'text-gray-500 ml-1'} font-bold uppercase tracking-wider">${mine ? 'You' : 'Admin'}</span>
-                <div class="${mine ? 'bg-gradient-to-r from-cyan-500 to-blue-500 rounded-tr-sm' : 'bg-white/10 border border-white/5 rounded-tl-sm'} rounded-2xl px-4 py-2 text-sm max-w-[85%]">${escapeHtml(msg.text || '')}</div>
+                <div class="${mine ? 'bg-gradient-to-r from-cyan-500 to-blue-500 rounded-tr-sm' : 'bg-white/10 border border-white/5 rounded-tl-sm'} rounded-2xl px-4 py-2 text-sm max-w-[85%]">${escapeHtml(messageText)}</div>
             `;
             chatMessages.appendChild(row);
         });
@@ -98,28 +106,43 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function sendMessage() {
+    async function loadThread() {
+        const payload = await apiJson(`/api/messages?userEmail=${encodeURIComponent(threadEmail)}`);
+        return payload.messages || [];
+    }
+
+    async function refreshThread() {
+        try {
+            const thread = await loadThread();
+            renderThread(thread);
+        } catch (err) {
+            console.error('Failed to load chat thread:', err);
+        }
+    }
+
+    async function sendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
 
-        const store = getStore();
-        const thread = store[threadEmail] || [];
-        thread.push({ sender: 'customer', text, createdAt: new Date().toISOString() });
-        store[threadEmail] = thread;
-        saveStore(store);
-        chatInput.value = '';
-        renderThread();
+        try {
+            await apiJson('/api/messages', {
+                method: 'POST',
+                body: JSON.stringify({ userEmail: threadEmail, sender: 'customer', message: text })
+            });
+            chatInput.value = '';
+            await refreshThread();
+        } catch (err) {
+            console.error('Failed to send chat message:', err);
+        }
     }
 
     chatToggleBtn.addEventListener('click', toggleChat);
     chatCloseBtn.addEventListener('click', toggleChat);
-    chatForm.addEventListener('submit', (e) => {
+    chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        sendMessage();
+        await sendMessage();
     });
 
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'va_pilot_messages') renderThread();
-    });
-    setInterval(renderThread, 2000);
+    refreshThread();
+    setInterval(refreshThread, 3000);
 });
