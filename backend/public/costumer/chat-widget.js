@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const currentUser = JSON.parse(localStorage.getItem('va_pilot_current_user') || 'null');
-    if (!currentUser || !currentUser.email) return;
-
-    const threadEmail = String(currentUser.email).trim().toLowerCase();
+    const threadEmail = resolveUserEmail();
+    if (!threadEmail) return;
 
     const chatHTML = `
         <div id="global-chat-widget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4 pointer-events-none font-sans text-white">
@@ -42,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
     const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+    const seenMessageIds = new Set();
 
     async function apiJson(path, options = {}) {
         const response = await fetch(`${API_BASE}${path}`, {
@@ -71,10 +70,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function resolveUserEmail() {
+        const bodyEmail = document.body?.dataset?.userEmail;
+        const nodeEmail = document.querySelector('[data-user-email]')?.dataset?.userEmail;
+        const inputEmail = document.getElementById('user-email')?.value;
+        const displayEmail = document.getElementById('user-email-display')?.textContent;
+        const globalEmail = window.currentUserEmail || window.currentUser?.email;
+        const email = String(bodyEmail || nodeEmail || inputEmail || displayEmail || globalEmail || '').trim().toLowerCase();
+        return email || '';
+    }
+
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function normalizeMessageId(message) {
+        if (!message) return '';
+        const id = message._id || message.id || '';
+        return String(id || '').trim();
     }
 
     function renderThread(thread) {
@@ -92,17 +107,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         chatMessages.innerHTML = '';
         thread.forEach((msg) => {
-            const mine = String(msg.sender || '').toLowerCase() === 'customer';
-            const messageText = msg.message || msg.text || '';
-            const row = document.createElement('div');
-            row.className = `flex flex-col ${mine ? 'items-end' : 'items-start'} gap-1 w-full`;
-            row.innerHTML = `
-                <span class="text-[10px] ${mine ? 'text-cyan-300 mr-1' : 'text-gray-500 ml-1'} font-bold uppercase tracking-wider">${mine ? 'You' : 'Admin'}</span>
-                <div class="${mine ? 'bg-gradient-to-r from-cyan-500 to-blue-500 rounded-tr-sm' : 'bg-white/10 border border-white/5 rounded-tl-sm'} rounded-2xl px-4 py-2 text-sm max-w-[85%]">${escapeHtml(messageText)}</div>
-            `;
-            chatMessages.appendChild(row);
+            appendMessage(msg);
         });
+    }
 
+    function appendMessage(msg) {
+        if (!msg) return;
+        const messageId = normalizeMessageId(msg);
+        if (messageId && seenMessageIds.has(messageId)) return;
+        if (messageId) seenMessageIds.add(messageId);
+
+        const mine = String(msg.sender || '').toLowerCase() === 'customer';
+        const messageText = msg.message || msg.text || '';
+        const row = document.createElement('div');
+        row.className = `flex flex-col ${mine ? 'items-end' : 'items-start'} gap-1 w-full`;
+        row.innerHTML = `
+            <span class="text-[10px] ${mine ? 'text-cyan-300 mr-1' : 'text-gray-500 ml-1'} font-bold uppercase tracking-wider">${mine ? 'You' : 'Admin'}</span>
+            <div class="${mine ? 'bg-gradient-to-r from-cyan-500 to-blue-500 rounded-tr-sm' : 'bg-white/10 border border-white/5 rounded-tl-sm'} rounded-2xl px-4 py-2 text-sm max-w-[85%]">${escapeHtml(messageText)}</div>
+        `;
+        chatMessages.appendChild(row);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
@@ -117,6 +140,34 @@ document.addEventListener('DOMContentLoaded', () => {
             renderThread(thread);
         } catch (err) {
             console.error('Failed to load chat thread:', err);
+        }
+    }
+
+    function loadSocketIo() {
+        return new Promise((resolve, reject) => {
+            if (window.io) return resolve(window.io);
+            const script = document.createElement('script');
+            script.src = `${API_BASE}/socket.io/socket.io.js`;
+            script.onload = () => resolve(window.io);
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    async function connectSocket() {
+        try {
+            const ioClient = await loadSocketIo();
+            const socket = ioClient(API_BASE, { transports: ['websocket'], withCredentials: true });
+            socket.on('connect', () => {
+                socket.emit('joinChat', threadEmail);
+            });
+            socket.on('newMessage', (msg) => {
+                if (!msg) return;
+                if (String(msg.userEmail || '').trim().toLowerCase() !== threadEmail) return;
+                appendMessage(msg);
+            });
+        } catch (err) {
+            console.error('Socket.io failed to connect:', err);
         }
     }
 
@@ -144,5 +195,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     refreshThread();
-    setInterval(refreshThread, 3000);
+    connectSocket();
 });
