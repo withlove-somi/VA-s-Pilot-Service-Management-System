@@ -277,10 +277,10 @@
         verificationBtn.classList.remove('opacity-40', 'pointer-events-none');
       }
 
-      renderTransactions(userOrders);
+      renderTransactions(userOrders, displayName);
     }
 
-    function renderTransactions(orders) {
+    function renderTransactions(orders, displayName) {
       const container = document.getElementById('transactions-container');
       const terminalStates = ['completed', 'cancelled', 'declined_order', 'expired'];
       const historyOrders = (orders || []).filter((order) =>
@@ -315,6 +315,7 @@
           ? "bg-green-500/10 text-green-400 border-green-500/20"
           : "bg-red-500/10 text-red-400 border-red-500/20";
 
+        const customerName = displayName || order.customerName || order.clientName || order.customerEmail || order.customer_email || 'Customer';
         const reason =
           String(order.rejectionReason || order.lastActionReason || order.declineReason || "").trim();
         const prettyDate = order.updatedAt || order.createdAt
@@ -332,7 +333,7 @@
               </div>
               <div>
                 <div class="flex items-center gap-3">
-                  <h4 class="font-bold text-white">${escapeHtml(order.game || 'Boost Service')}</h4>
+                  <h4 class="font-bold text-white">${escapeHtml(customerName)}</h4>
                   <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${badgeStyle}">${escapeHtml(statusLabelMap[statusKey] || order.status)}</span>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">Order ID: <span class="text-gray-400">${escapeHtml(order.id)}</span> • Date: ${escapeHtml(prettyDate)}</p>
