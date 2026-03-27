@@ -39,8 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
-    const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
     const seenMessageIds = new Set();
+    let pollTimer = null;
+    let socketConnected = false;
+    let socketClient = null;
+
+    function resolveApiBase() {
+        const fromWindow = window.API_BASE || window.__API_BASE__;
+        const fromBody = document.body?.dataset?.apiBase;
+        const fromMeta = document.querySelector('meta[name="api-base"]')?.content;
+        const candidate = String(fromWindow || fromBody || fromMeta || '').trim();
+        if (candidate) return candidate.replace(/\/+$/, '');
+        const origin = window.location?.origin;
+        if (origin && origin !== 'null') return origin;
+        return 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+    }
+
+    const API_BASE = resolveApiBase();
 
     async function apiJson(path, options = {}) {
         const response = await fetch(`${API_BASE}${path}`, {
@@ -59,15 +74,48 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     }
 
+    function isChatOpen() {
+        return !chatWindow.classList.contains('scale-0');
+    }
+
+    function startPolling() {
+        if (pollTimer) return;
+        pollTimer = setInterval(() => {
+            if (isChatOpen()) refreshThread();
+        }, 6000);
+    }
+
+    function stopPolling() {
+        if (!pollTimer) return;
+        clearInterval(pollTimer);
+        pollTimer = null;
+    }
+
     function toggleChat() {
+        const willOpen = chatWindow.classList.contains('scale-0');
         chatWindow.classList.toggle('scale-0');
         chatWindow.classList.toggle('opacity-0');
         chatWindow.classList.toggle('scale-100');
         chatWindow.classList.toggle('opacity-100');
-        if (!chatWindow.classList.contains('scale-0')) {
+        if (willOpen) {
             chatInput.focus();
             refreshThread();
+            if (!socketConnected) startPolling();
+        } else {
+            stopPolling();
         }
+    }
+
+    function getStoredUserEmail() {
+        try {
+            const local = JSON.parse(localStorage.getItem('va_pilot_current_user') || 'null');
+            if (local?.email) return String(local.email).trim().toLowerCase();
+        } catch (err) {}
+        try {
+            const session = JSON.parse(sessionStorage.getItem('va_pilot_current_user') || 'null');
+            if (session?.email) return String(session.email).trim().toLowerCase();
+        } catch (err) {}
+        return '';
     }
 
     function resolveUserEmail() {
@@ -76,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputEmail = document.getElementById('user-email')?.value;
         const displayEmail = document.getElementById('user-email-display')?.textContent;
         const globalEmail = window.currentUserEmail || window.currentUser?.email;
-        const email = String(bodyEmail || nodeEmail || inputEmail || displayEmail || globalEmail || '').trim().toLowerCase();
+        const storedEmail = getStoredUserEmail();
+        const email = String(bodyEmail || nodeEmail || inputEmail || displayEmail || globalEmail || storedEmail || '').trim().toLowerCase();
         return email || '';
     }
 
@@ -93,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderThread(thread) {
+        seenMessageIds.clear();
         if (!thread.length) {
             chatMessages.innerHTML = `
                 <div class="flex flex-col items-start gap-1 w-full">
@@ -157,17 +207,28 @@ document.addEventListener('DOMContentLoaded', () => {
     async function connectSocket() {
         try {
             const ioClient = await loadSocketIo();
-            const socket = ioClient(API_BASE, { transports: ['websocket'], withCredentials: true });
-            socket.on('connect', () => {
-                socket.emit('joinChat', threadEmail);
+            socketClient = ioClient(API_BASE, { transports: ['websocket', 'polling'] });
+            socketClient.on('connect', () => {
+                socketConnected = true;
+                socketClient.emit('joinChat', threadEmail);
+                stopPolling();
             });
-            socket.on('newMessage', (msg) => {
+            socketClient.on('disconnect', () => {
+                socketConnected = false;
+                if (isChatOpen()) startPolling();
+            });
+            socketClient.on('connect_error', () => {
+                socketConnected = false;
+                if (isChatOpen()) startPolling();
+            });
+            socketClient.on('newMessage', (msg) => {
                 if (!msg) return;
                 if (String(msg.userEmail || '').trim().toLowerCase() !== threadEmail) return;
                 appendMessage(msg);
             });
         } catch (err) {
             console.error('Socket.io failed to connect:', err);
+            if (isChatOpen()) startPolling();
         }
     }
 
