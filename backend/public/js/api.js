@@ -1,7 +1,10 @@
 (() => {
   "use strict";
 
-  const BASE_URL = "https://va-s-pilot-service-management-system-production-d6a0.up.railway.app";
+  const BASE_URL =
+    window.API_BASE ||
+    window.__API_BASE__ ||
+    "https://va-s-pilot-service-management-system-production-d6a0.up.railway.app";
 
   async function apiRequest(path, options = {}) {
     const url = path.startsWith("http") ? path : `${BASE_URL}${path}`;

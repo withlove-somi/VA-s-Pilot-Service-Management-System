@@ -9,6 +9,7 @@
   <script>
     tailwind.config = { theme: { extend: { fontFamily: { sans: ['Poppins', 'sans-serif'] }, colors: { 'brand-bg': '#0f0518', 'brand-pink': '#e000ff', 'brand-purple': '#7a00ff' } } } }
   </script>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased h-screen flex relative overflow-hidden selection:bg-brand-pink selection:text-white">
   <div class="fixed inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
@@ -144,7 +145,7 @@
   </div>
 
   <script>
-    const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+    const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
     const params = new URLSearchParams(window.location.search);
     const email = String(params.get('email') || '').trim().toLowerCase();
     let isVerified = false;
@@ -512,4 +513,6 @@
     <script src="sidebar-active.js"></script>
 </body>
 </html>
+
+
 

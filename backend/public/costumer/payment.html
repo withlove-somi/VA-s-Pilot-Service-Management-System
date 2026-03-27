@@ -20,6 +20,7 @@
             }
         }
     </script>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex relative overflow-hidden">
 
@@ -156,7 +157,7 @@
 
                         <div class="flex-1 flex flex-col items-center justify-center w-full">
                             <div class="bg-white p-3 rounded-2xl shadow-xl mb-8 w-56 h-56 flex items-center justify-center relative group">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=GcashTransfer&color=000000&bgcolor=ffffff" alt="GCash QR Code" class="rounded-xl w-full h-full object-cover">
+                                <img id="payment-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=GcashTransfer&color=000000&bgcolor=ffffff" alt="GCash QR Code" class="rounded-xl w-full h-full object-cover">
                                 <div class="absolute inset-0 bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                     <span class="text-white text-xs font-bold uppercase tracking-widest">Scan to Pay</span>
                                 </div>
@@ -165,12 +166,12 @@
                             <div class="space-y-5 w-full">
                                 <div class="bg-black/40 rounded-lg p-4 border border-white/5 text-center">
                                     <span class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Account Name</span>
-                                    <span class="text-xl font-bold text-white tracking-wide">VA PILOT SERVICE</span>
+                                    <span id="payment-name" class="text-xl font-bold text-white tracking-wide">VA PILOT SERVICE</span>
                                 </div>
-                                <div class="bg-black/40 rounded-lg p-4 border border-white/5 relative group cursor-pointer text-center" onclick="copyToClipboard('09123456789')">
+                                <div class="bg-black/40 rounded-lg p-4 border border-white/5 relative group cursor-pointer text-center" onclick="copyToClipboard(getPaymentNumber())">
                                     <span class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Account Number</span>
                                     <div class="flex items-center justify-center gap-2">
-                                        <span class="text-3xl font-bold text-brand-pink tracking-widest font-mono">0912 345 6789</span>
+                                        <span id="payment-number" class="text-3xl font-bold text-brand-pink tracking-widest font-mono" data-raw="09123456789">0912 345 6789</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.40.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" /></svg>
                                     </div>
                                     <p class="text-[10px] text-gray-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to copy</p>
@@ -188,7 +189,7 @@
     <script src="chat-widget.js"></script>
 
     <script>
-        const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+        const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
         async function apiJson(path, options = {}) {
             const response = await fetch(`${API_BASE}${path}`, {
                 headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
@@ -210,6 +211,36 @@
             navigator.clipboard.writeText(text).then(() => {
                 alert("Account number copied to clipboard!");
             });
+        }
+
+        function getPaymentNumber() {
+            const node = document.getElementById('payment-number');
+            const raw = node?.dataset?.raw || '';
+            return String(raw || node?.textContent || '').replace(/\s+/g, '');
+        }
+
+        async function loadPaymentSettings() {
+            try {
+                const payload = await apiJson('/api/settings/payment');
+                const settings = payload.settings || {};
+                if (settings.name) {
+                    const nameEl = document.getElementById('payment-name');
+                    if (nameEl) nameEl.textContent = settings.name;
+                }
+                if (settings.number) {
+                    const numberEl = document.getElementById('payment-number');
+                    if (numberEl) {
+                        numberEl.dataset.raw = settings.number;
+                        numberEl.textContent = settings.number;
+                    }
+                }
+                if (settings.qr) {
+                    const qrEl = document.getElementById('payment-qr');
+                    if (qrEl) qrEl.src = settings.qr;
+                }
+            } catch (err) {
+                console.warn('Unable to load payment settings:', err);
+            }
         }
 
         const fileInput = document.getElementById('receipt-upload');
@@ -273,6 +304,7 @@
             }
         }
         initOrder();
+        loadPaymentSettings();
 
         // Handle Form Submission
         paymentForm.addEventListener('submit', function(e) {
@@ -326,6 +358,7 @@
     <script src="sidebar-active.js"></script>
 </body>
 </html>
+
 
 
 

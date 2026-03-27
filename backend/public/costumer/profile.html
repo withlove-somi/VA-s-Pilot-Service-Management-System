@@ -21,6 +21,7 @@
             }
         }
     </script>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased h-screen flex relative overflow-hidden selection:bg-brand-pink selection:text-white">
 
@@ -202,7 +203,7 @@
     </div>
 
     <script>
-        const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+        const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
         let currentUser = JSON.parse(localStorage.getItem('va_pilot_current_user'));
         if (!currentUser) {
             window.location.href = 'login.html';
@@ -538,6 +539,8 @@
     <script src="sidebar-active.js"></script>
 </body>
 </html>
+
+
 
 
 

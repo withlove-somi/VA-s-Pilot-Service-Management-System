@@ -65,6 +65,7 @@
       }
     }
   </style>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex items-center justify-center relative overflow-hidden">
 
@@ -120,7 +121,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="auth-otp.js"></script>
     <script>
-        const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+        const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
         const otpInputs = document.querySelectorAll('.otp-input');
         const verifyBtn = document.getElementById('verify-btn');
         const resendBtn = document.getElementById('resend-btn');
@@ -310,6 +311,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 

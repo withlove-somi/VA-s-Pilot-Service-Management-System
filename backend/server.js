@@ -172,6 +172,16 @@ const transactionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const paymentSettingsSchema = new mongoose.Schema(
+  {
+    _id: { type: String, default: "payment" },
+    name: { type: String, trim: true },
+    number: { type: String, trim: true },
+    qr: { type: String },
+  },
+  { timestamps: true }
+);
+
 const User = mongoose.model("User", userSchema);
 const Order = mongoose.model("Order", orderSchema);
 const Notification = mongoose.model("Notification", notificationSchema);
@@ -182,6 +192,7 @@ const VerificationRequest = mongoose.model(
 const ChatMessage = mongoose.model("ChatMessage", chatMessageSchema);
 const Feedback = mongoose.model("Feedback", feedbackSchema);
 const Transaction = mongoose.model("Transaction", transactionSchema);
+const PaymentSettings = mongoose.model("PaymentSettings", paymentSettingsSchema);
 
 async function addNotification(userEmail, title, message, type = "general") {
   const email = normalizeEmail(userEmail);
@@ -727,6 +738,44 @@ app.patch("/api/notifications/:id/read", async (req, res) => {
   }
 });
 
+app.get("/api/settings/payment", async (req, res) => {
+  try {
+    const settings = await PaymentSettings.findById("payment").lean();
+    res.json({ ok: true, settings });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.put("/api/settings/payment", async (req, res) => {
+  try {
+    const updates = {};
+    if (Object.prototype.hasOwnProperty.call(req.body, "name")) {
+      updates.name = String(req.body.name || "").trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, "number")) {
+      updates.number = String(req.body.number || "").trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, "qr")) {
+      updates.qr = String(req.body.qr || "").trim();
+    }
+
+    if (!Object.keys(updates).length) {
+      return clientError(res, "name, number, or qr is required");
+    }
+
+    const settings = await PaymentSettings.findByIdAndUpdate(
+      "payment",
+      updates,
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).lean();
+
+    res.json({ ok: true, settings });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 
 
 app.get("/api/verifications", async (req, res) => {
@@ -902,6 +951,7 @@ async function ensureCollections() {
     ChatMessage.createCollection(),
     Feedback.createCollection(),
     Transaction.createCollection(),
+    PaymentSettings.createCollection(),
   ]);
 }
 

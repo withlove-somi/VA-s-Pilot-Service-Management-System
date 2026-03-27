@@ -20,6 +20,7 @@
       }
     }
   </script>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased h-screen flex relative overflow-hidden">
   <div class="fixed inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
@@ -135,8 +136,9 @@
   </div>
 
   <script>
-    const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+    const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
     let selectedEmail = '';
+    let allUsers = [];
 
     async function apiJson(path, options = {}) {
       const response = await fetch(`${API_BASE}${path}`, {
@@ -155,23 +157,19 @@
       return data;
     }
 
-    function getUsers() {
-      return JSON.parse(localStorage.getItem('va_pilot_users')) || [];
-    }
-
     async function refreshUsers() {
       try {
         const payload = await apiJson('/api/users');
         const users = (payload.users || []).filter((u) => String(u.role || 'customer').toLowerCase() !== 'admin');
-        localStorage.setItem('va_pilot_users', JSON.stringify(users));
+        allUsers = users;
         return users;
       } catch (err) {
-        return getUsers();
+        return allUsers;
       }
     }
 
     function renderThreadList() {
-      const users = getUsers();
+      const users = allUsers;
       const container = document.getElementById('thread-list');
       container.innerHTML = '';
 
@@ -335,6 +333,7 @@
     <script src="sidebar-active.js"></script>
 </body>
 </html>
+
 
 
 

@@ -21,6 +21,7 @@
             }
         }
     </script>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased h-screen flex relative overflow-hidden">
 
@@ -143,7 +144,7 @@
     </div>
 
     <script>
-        const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+        const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
         async function apiJson(path, options = {}) {
             const response = await fetch(`${API_BASE}${path}`, {
                 headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
@@ -334,13 +335,26 @@
 
         // --- MODAL LOGIC START ---
         
-        function openPaymentModal(orderId) {
+        let paymentSettingsCache = null;
+
+        async function getPaymentSettings() {
+            if (paymentSettingsCache) return paymentSettingsCache;
+            try {
+                const payload = await apiJson('/api/settings/payment');
+                paymentSettingsCache = payload.settings || {};
+            } catch (err) {
+                paymentSettingsCache = {};
+            }
+            return paymentSettingsCache;
+        }
+
+        async function openPaymentModal(orderId) {
             currentPayingOrderId = orderId; 
             const modal = document.getElementById('payment-modal');
             const modalContent = document.getElementById('payment-modal-content');
             
             // Fetch admin data for Step 1
-            const savedAdminInfo = JSON.parse(localStorage.getItem('va_admin_payment'));
+            const savedAdminInfo = await getPaymentSettings();
             if (savedAdminInfo) {
                 if (savedAdminInfo.name) document.getElementById('modal-receiver-name').textContent = savedAdminInfo.name;
                 if (savedAdminInfo.number) document.getElementById('modal-receiver-number').textContent = savedAdminInfo.number;
@@ -445,6 +459,7 @@
     <script src="sidebar-active.js"></script>
 </body>
 </html>
+
 
 
 

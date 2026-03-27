@@ -23,6 +23,7 @@
             }
         }
     </script>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex relative overflow-hidden">
 
@@ -83,7 +84,7 @@
     </main>
 
     <script>
-        const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+        const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
 
         async function apiJson(path, options = {}) {
             const response = await fetch(`${API_BASE}${path}`, {
@@ -114,7 +115,7 @@
             }
             
             // FILTER: Only show orders with the 'Completed' status
-            const completedOrders = allOrders.filter(order => order.status === 'Completed');
+            const completedOrders = allOrders.filter(order => String(order.status || '').trim().toLowerCase() === 'completed');
 
             if (completedOrders.length === 0) {
                 container.innerHTML = `
@@ -187,6 +188,7 @@
     <script src="sidebar-active.js"></script>
 </body>
 </html>
+
 
 
 

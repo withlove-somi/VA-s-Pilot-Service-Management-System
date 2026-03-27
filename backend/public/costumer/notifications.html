@@ -21,6 +21,7 @@
       }
     }
   </script>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased h-screen flex relative overflow-hidden">
   <div class="fixed inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
@@ -87,7 +88,7 @@
   </main>
 
   <script>
-    const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+    const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
     async function apiJson(path, options = {}) {
       const response = await fetch(`${API_BASE}${path}`, {
         headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
@@ -173,6 +174,8 @@
     <script src="sidebar-active.js"></script>
 </body>
 </html>
+
+
 
 
 

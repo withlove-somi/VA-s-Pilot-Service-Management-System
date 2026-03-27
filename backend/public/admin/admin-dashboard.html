@@ -23,6 +23,7 @@
             }
         }
     </script>
+  <script src="/js/config.js"></script>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased selection:bg-brand-pink selection:text-white h-screen flex relative overflow-hidden">
 
@@ -172,7 +173,7 @@
     </main>
 
     <script>
-        const API_BASE = 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
+        const API_BASE = window.API_BASE || 'https://va-s-pilot-service-management-system-production-d6a0.up.railway.app';
 
         async function apiJson(path, options = {}) {
             const response = await fetch(`${API_BASE}${path}`, {
@@ -195,7 +196,7 @@
             try {
                 const payload = await apiJson('/api/orders');
                 const allOrders = payload.orders || [];
-                const completed = allOrders.filter((o) => o.status === 'Completed').length;
+                const completed = allOrders.filter((o) => String(o.status || '').trim().toLowerCase() === 'completed').length;
                 document.getElementById('completed-orders-count').textContent = String(completed);
             } catch (err) {
                 document.getElementById('completed-orders-count').textContent = '0';
@@ -226,20 +227,22 @@
         let isEditing = false;
         let base64Image = null; // Store uploaded image data
 
-        // Load existing data from localStorage (if any)
-        function loadPaymentInfo() {
-            const savedInfo = JSON.parse(localStorage.getItem('va_admin_payment'));
-            if (savedInfo) {
-                displayName.textContent = savedInfo.name;
-                displayNumber.textContent = savedInfo.number;
+        async function loadPaymentInfo() {
+            try {
+                const payload = await apiJson('/api/settings/payment');
+                const savedInfo = payload.settings || {};
+                if (savedInfo.name) displayName.textContent = savedInfo.name;
+                if (savedInfo.number) displayNumber.textContent = savedInfo.number;
                 if (savedInfo.qr) {
                     displayQr.src = savedInfo.qr;
                     previewQr.src = savedInfo.qr;
                     base64Image = savedInfo.qr;
                 }
+            } catch (err) {
+                console.warn('Unable to load payment settings:', err);
             }
         }
-        
+
         loadPaymentInfo();
         refreshDashboardStats();
 
@@ -285,7 +288,7 @@
         });
 
         // Handle Save & Validation
-        editMode.addEventListener('submit', function(e) {
+        editMode.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const nameVal = inputName.value.trim();
@@ -317,29 +320,32 @@
 
             // If everything passes, save and update UI
             if (isValid) {
-                // Update UI Display
-                displayName.textContent = nameVal;
-                displayNumber.textContent = numberVal;
-                if (base64Image) {
-                    displayQr.src = base64Image;
+                try {
+                    const payload = await apiJson('/api/settings/payment', {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            name: nameVal,
+                            number: numberVal,
+                            qr: base64Image || ''
+                        })
+                    });
+                    const saved = payload.settings || {};
+                    displayName.textContent = saved.name || nameVal;
+                    displayNumber.textContent = saved.number || numberVal;
+                    if (saved.qr || base64Image) {
+                        displayQr.src = saved.qr || base64Image;
+                    }
+                    toggleEdit();
+                } catch (err) {
+                    alert(err.message || 'Unable to save payment settings.');
                 }
-
-                // Save to localStorage so it persists across refreshes
-                // Customers can pull from this same key when paying!
-                localStorage.setItem('va_admin_payment', JSON.stringify({
-                    name: nameVal,
-                    number: numberVal,
-                    qr: base64Image
-                }));
-
-                // Close edit mode
-                toggleEdit();
             }
         });
     </script>
     <script src="sidebar-active.js"></script>
 </body>
 </html>
+
 
 
 
